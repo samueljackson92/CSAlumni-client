@@ -4,7 +4,7 @@ except ImportError:
     from distutils.core import setup
 
 config = {
-    'description': 'The CS Alumni application',
+    'description': 'CS Alumni Client application',
     'author': 'Samuel Jackson',
     'url': 'http://github.com/samueljackson92/CSAlumni-Client',
     'download_url': 'http://github.com/samueljackson92/CSAlumni-Client',
