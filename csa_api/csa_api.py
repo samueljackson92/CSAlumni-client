@@ -18,6 +18,10 @@ class CsaAPI(object):
         self.username = username
         self.password = password
 
+
+    def get_user(self, id=None):
+        pass
+
     def make_request(self, end_point, end_point_vars={}):
         """Make a request to Csa API at the specified end point
 

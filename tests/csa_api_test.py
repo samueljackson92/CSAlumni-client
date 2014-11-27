@@ -106,3 +106,58 @@ class ApiTests(unittest.TestCase):
         self.api = CsaAPI("admin", "not_a_password")
         resp = self.api.make_request("/users/show/:id", {':id':'41'})
 
+
+    @responses.activate
+    def test_request_can_view_user(self):
+        responses.add(responses.GET,
+                      self.api._build_end_point_uri('/users/show/:id',
+                                                    {':id': '39'}),
+                      body=load_fixture('users/show/39.json'),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("cwl39", 'taliesin')
+        resp = api.get_user()
+
+        nose.tools.assert_equal("Firstname39", resp["firstname"])
+        nose.tools.assert_equal("Surname39", resp["surname"])
+        nose.tools.assert_equal(1985, resp["grad_year"])
+        nose.tools.assert_equal("01970 622422", resp["phone"])
+        nose.tools.assert_equal("cwl39@aber.ac.uk", resp["email"])
+        nose.tools.assert_equal(True, resp["jobs"])
+        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["created_at"])
+        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["updated_at"])
+
+    @responses.activate
+    @nose.tools.raises(requests.exceptions.HTTPError)
+    def test_request_cannot_view_other_user(self):
+        responses.add(responses.GET,
+                      self.api._build_end_point_uri('/users/show/:id',
+                                                    {':id': '41'}),
+                      body=load_fixture('users/show/41.json'),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("cwl39", 'taliesin')
+        resp = api.get_user('41')
+
+    @responses.activate
+    def test_request_admin_can_view_user(self):
+        responses.add(responses.GET,
+                      self.api._build_end_point_uri('/users/show/:id',
+                                                    {':id': '39'}),
+                      body=load_fixture('users/show/39.json'),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        resp = api.get_user('39')
+
+        nose.tools.assert_equal("Firstname39", resp["firstname"])
+        nose.tools.assert_equal("Surname39", resp["surname"])
+        nose.tools.assert_equal(1985, resp["grad_year"])
+        nose.tools.assert_equal("01970 622422", resp["phone"])
+        nose.tools.assert_equal("cwl39@aber.ac.uk", resp["email"])
+        nose.tools.assert_equal(True, resp["jobs"])
+        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["created_at"])
+        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["updated_at"])
