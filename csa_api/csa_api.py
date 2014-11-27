@@ -17,10 +17,17 @@ class CsaAPI(object):
     def __init__(self, username, password):
         self.username = username
         self.password = password
+        self.session = requests.Session()
+        self.session.auth = (self.username, self.password)
+        self.session.headers = {"x-api-client-type", "application/json"}
+
+        json_reponse = self.make_request('/users/verify')
+        self.user_id = json_reponse["id"]
 
 
-    def get_user(self, id=None):
-        pass
+    def get_user(self, user_id=None):
+        user_id = self.user_id if user_id is None else user_id
+        return self.make_request('/users/show/:id', {":id": user_id})
 
     def make_request(self, end_point, end_point_vars={}):
         """Make a request to Csa API at the specified end point
@@ -28,20 +35,16 @@ class CsaAPI(object):
         :param end_point: string representing the end resource request
         :param end_point_vars: dictionary of variables to be replaced in the uri
         """
-        url = self._build_end_point_uri(end_point, end_point_vars)
-
-        session = requests.Session()
-        req = requests.Request(END_POINTS[end_point], url,
-                               auth=(self.username, self.password))
-        prepped = req.prepare()
-        response = session.send(prepped)
-
+        url = CsaAPI._build_end_point_uri(end_point, end_point_vars)
+        req = requests.Request(END_POINTS[end_point], url)
+        prepped = self.session.prepare_request(req)
+        response = self.session.send(prepped)
         #check the response was ok
         response.raise_for_status()
-
         return response.json()
 
-    def _build_end_point_uri(self, end_point, params={}):
+    @staticmethod
+    def _build_end_point_uri(end_point, params={}):
         """Build a url to a API end point.
 
         This takes a optional dictionary of regex parameters to replace in the
@@ -62,8 +65,9 @@ class CsaAPI(object):
             raise ValueError("Some parameters were not replaced in uri.\
                              Cannot build valid application url.")
 
-        return self._build_domain_address() + uri
+        return CsaAPI._build_domain_address() + uri
 
-    def _build_domain_address(self):
+    @staticmethod
+    def _build_domain_address():
         """ Build the base url of the api end points """
         return PROTOCOL + ":".join((DOMAIN, PORT))
