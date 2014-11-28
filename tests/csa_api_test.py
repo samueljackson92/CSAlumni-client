@@ -41,8 +41,7 @@ class ApiTests(unittest.TestCase):
         constants.PORT = '3000'
         constants.CONTENT_TYPE = 'json'
 
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_end_point_uri("/home/index")
+        uri = CsaAPI._build_end_point_uri("/home/index")
 
     @responses.activate
     def test_build_end_point_uri_with_vars(self):
@@ -62,8 +61,7 @@ class ApiTests(unittest.TestCase):
         constants.PORT = '3000'
         constants.CONTENT_TYPE = 'json'
 
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_end_point_uri("/users/show/:id", params={})
+        uri = CsaAPI._build_end_point_uri("/users/show/:id", params={})
 
     @responses.activate
     def test_build_end_point_uri_with_no_vars_and_params(self):
