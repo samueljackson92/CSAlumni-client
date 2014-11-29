@@ -41,6 +41,14 @@ class CsaAPI(object):
         """
         self.make_request('/users/update/:id', {":id": user.id})
 
+    def destory_user(self, user_id=None):
+        """Destory a user record
+
+        :param user_id: the ide of the user to delete
+        """
+        user_id = self.user_id if user_id is None else user_id
+        self.make_request('/users/destory/:id', {":id": user_id})
+
     def verify(self):
         """Verify a user can log in and get their user id"""
         response = self.make_request('/users/verify')

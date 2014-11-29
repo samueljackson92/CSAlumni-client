@@ -317,3 +317,41 @@ class ApiTests(unittest.TestCase):
 
         resp = api.get_user(39)
         nose.tools.assert_equal(1986, resp["grad_year"])
+
+
+    @responses.activate
+    @nose.tools.raises(requests.exceptions.HTTPError)
+    def test_user_cannot_destroy(self):
+        responses.reset()
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 39}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add(responses.DELETE,
+                      CsaAPI._build_end_point_uri('/users/destory/:id',
+                                                    {':id': '39'}),
+                      status=422,
+                      content_type='application/json')
+
+        api = CsaAPI("cwl39", 'taliesin')
+        api.destory_user()
+
+    @responses.activate
+    def test_admin_can_destory(self):
+        responses.reset()
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 41}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add(responses.DELETE,
+                      CsaAPI._build_end_point_uri('/users/destory/:id',
+                                                    {':id': '39'}),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("cwl39", 'taliesin')
+        api.destory_user(39)
