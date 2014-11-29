@@ -5,6 +5,7 @@ __license__ = "MIT"
 import requests
 import re
 
+from json_object import JSONObject
 from constants import *
 
 class CsaAPI(object):
@@ -20,14 +21,31 @@ class CsaAPI(object):
         self.session = requests.Session()
         self.session.auth = (self.username, self.password)
         self.session.headers = {"x-api-client-type", "application/json"}
-
-        json_reponse = self.make_request('/users/verify')
-        self.user_id = json_reponse["id"]
-
+        self.verify()
 
     def get_user(self, user_id=None):
+        """Get a user record as an object
+
+        :param user_id: the id of the user to get.
+        """
         user_id = self.user_id if user_id is None else user_id
-        return self.make_request('/users/show/:id', {":id": user_id})
+        response = self.make_request('/users/show/:id', {":id": user_id})
+        user = JSONObject(response.json())
+        user["id"] = user_id
+        return user
+
+    def update_user(self, user):
+        """Update a user record
+
+        :param user: The user to update.
+        """
+        self.make_request('/users/update/:id', {":id": user.id})
+
+    def verify(self):
+        """Verify a user can log in and get their user id"""
+        response = self.make_request('/users/verify')
+        json_reponse = response.json()
+        self.user_id = json_reponse["id"]
 
     def make_request(self, end_point, end_point_vars={}):
         """Make a request to Csa API at the specified end point
@@ -41,7 +59,7 @@ class CsaAPI(object):
         response = self.session.send(prepped)
         #check the response was ok
         response.raise_for_status()
-        return response.json()
+        return response
 
     @staticmethod
     def _build_end_point_uri(end_point, params={}):
