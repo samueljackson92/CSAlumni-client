@@ -10,5 +10,5 @@ except:
     pass
 
 __all__ = [
-    'CsaAPI',
+    'CsaAPI'
 ]
