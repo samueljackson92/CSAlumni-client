@@ -353,5 +353,65 @@ class ApiTests(unittest.TestCase):
                       status=200,
                       content_type='application/json')
 
-        api = CsaAPI("cwl39", 'taliesin')
+        api = CsaAPI("admin", 'taliesin')
         api.destory_user(39)
+
+    @responses.activate
+    def test_user_search_no_query(self):
+        responses.reset()
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 41}",
+                      status=200,
+                      content_type='application/json')
+
+        search_fixture = json.loads(load_fixture('users/search.json'))
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/search'),
+                      body=json.dumps(search_fixture),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        response = api.search()
+
+        nose.tools.assert_list_equal(search_fixture, response)
+
+    @responses.activate
+    def test_user_search_with_query(self):
+        responses.reset()
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 41}",
+                      status=200,
+                      content_type='application/json')
+
+        search_fixture = json.loads(load_fixture('users/search.json'))
+        search_fixture = search_fixture[:1]
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/search'),
+                      body=json.dumps(search_fixture),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        response = api.search()
+        nose.tools.assert_list_equal(search_fixture, response)
+
+    @responses.activate
+    @nose.tools.raises(requests.exceptions.HTTPError)
+    def test_user_cannot_search(self):
+        responses.reset()
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 39}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/search'),
+                      status=422,
+                      content_type='application/json')
+
+        api = CsaAPI("cwl39", 'taliesin')
+        response = api.search()

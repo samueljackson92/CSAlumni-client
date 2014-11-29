@@ -49,20 +49,27 @@ class CsaAPI(object):
         user_id = self.user_id if user_id is None else user_id
         self.make_request('/users/destory/:id', {":id": user_id})
 
+
+    def search(self, query=''):
+        response = self.make_request('/users/search', params={'q': query})
+        json_reponse = response.json()
+        return json_reponse
+
     def verify(self):
         """Verify a user can log in and get their user id"""
         response = self.make_request('/users/verify')
         json_reponse = response.json()
         self.user_id = json_reponse["id"]
 
-    def make_request(self, end_point, end_point_vars={}):
+    def make_request(self, end_point, end_point_vars={}, params={}):
         """Make a request to Csa API at the specified end point
 
         :param end_point: string representing the end resource request
         :param end_point_vars: dictionary of variables to be replaced in the uri
+        :param params: dictionary of parameters to be passed via GET/POST
         """
         url = CsaAPI._build_end_point_uri(end_point, end_point_vars)
-        req = requests.Request(END_POINTS[end_point], url)
+        req = requests.Request(END_POINTS[end_point], url, data=params)
         prepped = self.session.prepare_request(req)
         response = self.session.send(prepped)
         #check the response was ok
