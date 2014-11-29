@@ -2,6 +2,7 @@ __author__ = "Samuel Jackson"
 __date__ = "November 26, 2014"
 __license__ = "MIT"
 
+import json
 import requests
 import re
 
@@ -20,8 +21,12 @@ class CsaAPI(object):
         self.password = password
         self.session = requests.Session()
         self.session.auth = (self.username, self.password)
-        self.session.headers = {"x-api-client-type", "application/json"}
+        self.session.headers.update({"content-type": "application/json", "x-api-client-type": "application/json"})
         self.verify()
+
+    ###########################################################################
+    # User request helpers
+    ###########################################################################
 
     def get_user(self, user_id=None):
         """Get a user record as an object
@@ -30,7 +35,7 @@ class CsaAPI(object):
         """
         user_id = self.user_id if user_id is None else user_id
         response = self.make_request('/users/show/:id', {":id": user_id})
-        user = JSONObject(response.json())
+        user = response.json()
         user["id"] = user_id
         return user
 
@@ -39,7 +44,9 @@ class CsaAPI(object):
 
         :param user: The user to update.
         """
-        self.make_request('/users/update/:id', {":id": user.id})
+        self.make_request('/users/update/:id',
+                          end_point_vars={":id": user["id"]},
+                          params=user)
 
     def destory_user(self, user_id=None):
         """Destory a user record
@@ -55,6 +62,33 @@ class CsaAPI(object):
         json_reponse = response.json()
         return json_reponse
 
+    ###########################################################################
+    # Broadcast request helpers
+    ###########################################################################
+
+    def get_broadcast(self, broadcast_id):
+        """Get a broadcast record
+
+        :param broadcast_id: the id of the broadcast to get.
+        """
+        response = self.make_request('/broadcasts/show/:id',
+                                    {":id": broadcast_id})
+        json_reponse = response.json()
+        return json_reponse
+
+    def get_broadcasts(self):
+        """Get all broadcasts on the server."""
+        response = self.make_request('/broadcasts')
+        json_reponse = response.json()
+        return json_reponse
+
+    def destroy_broadcast(self, broadcast_id):
+        """Destory a broadcast record
+
+        :param broadcast_id: the id of the broadcast to destory.
+        """
+        self.make_request('/broadcasts/destroy/:id', {":id": broadcast_id})
+
     def verify(self):
         """Verify a user can log in and get their user id"""
         response = self.make_request('/users/verify')
@@ -69,7 +103,7 @@ class CsaAPI(object):
         :param params: dictionary of parameters to be passed via GET/POST
         """
         url = CsaAPI._build_end_point_uri(end_point, end_point_vars)
-        req = requests.Request(END_POINTS[end_point], url, data=params)
+        req = requests.Request(END_POINTS[end_point], url, data=json.dumps(params))
         prepped = self.session.prepare_request(req)
         response = self.session.send(prepped)
         #check the response was ok
@@ -87,7 +121,7 @@ class CsaAPI(object):
         :param params: A dictionary parameters to replace in the uri
         """
         if end_point not in END_POINTS:
-            raise KeyError("Unsupported application endpoint.")
+            raise KeyError("Unsupported application endpoint: %s" % end_point)
 
         uri = end_point + '.' + CONTENT_TYPE
         for key, value in params.iteritems():
