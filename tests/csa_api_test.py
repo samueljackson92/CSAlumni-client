@@ -1,4 +1,4 @@
-from csa_api import CsaAPI, JSONObject, constants
+from csa_api import CsaAPI, constants
 
 import unittest
 import nose.tools
