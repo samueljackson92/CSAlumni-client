@@ -12,6 +12,7 @@ PORT = '3000'
 CONTENT_TYPE = 'json'
 
 END_POINTS = {
+    "/users/verify": "GET",
     "/users/search": "GET",
     "/users/show/:id": "GET",
     "/users/update/:id": "PUT",
