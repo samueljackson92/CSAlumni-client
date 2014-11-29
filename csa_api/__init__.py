@@ -6,11 +6,9 @@ __copyright__ = 'Copyright 2014 Samuel Jackson'
 
 try:
     from .csa_api import CsaAPI
-    from .json_object import JSONObject
 except:
     pass
 
 __all__ = [
-    'CsaAPI',
-    'JSONObject'
+    'CsaAPI'
 ]

@@ -6,7 +6,6 @@ import json
 import requests
 import re
 
-from json_object import JSONObject
 from constants import *
 
 class CsaAPI(object):
