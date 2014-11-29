@@ -5,7 +5,7 @@ import nose.tools
 import requests
 import responses
 import json
-from test_helpers import load_fixture
+from test_helpers import *
 
 class ApiTests(unittest.TestCase):
 
@@ -202,6 +202,12 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     def test_user_can_update_self(self):
         responses.reset()
+
+        def check_payload(request):
+            payload = json.loads(request.body)
+            nose.tools.assert_equal(1986, payload["grad_year"])
+            return (200, {}, {})
+
         responses.add(responses.GET,
                       CsaAPI._build_end_point_uri('/users/verify'),
                       body="{\"id\": 39}",
@@ -215,16 +221,16 @@ class ApiTests(unittest.TestCase):
                       status=200,
                       content_type='application/json')
 
-        responses.add(responses.PUT,
+        responses.add_callback(responses.PUT,
                       CsaAPI._build_end_point_uri('/users/update/:id',
                                                     {':id': '39'}),
-                      status=200,
+                      callback=check_payload,
                       content_type='application/json')
 
 
         api = CsaAPI("cwl39", 'taliesin')
         user = api.get_user()
-        user.grad_year = 1986
+        user["grad_year"] = 1986
         api.update_user(user)
 
         responses.reset()
@@ -266,12 +272,20 @@ class ApiTests(unittest.TestCase):
 
         api = CsaAPI("cwl39", 'taliesin')
         user = api.get_user(41)
-        user.grad_year = 1986
+        user["grad_year"] = 1986
         api.update_user(user)
 
     @responses.activate
     def test_admin_can_update_other_user(self):
         responses.reset()
+
+        def check_payload(request):
+            payload = json.loads(request.body)
+            nose.tools.assert_equal(1986, payload["grad_year"])
+            return (200, {}, {})
+
+        fixture = json.loads(load_fixture('users/show/39.json'))
+
         responses.add(responses.GET,
                       CsaAPI._build_end_point_uri('/users/verify'),
                       body="{\"id\": 41}",
@@ -285,10 +299,10 @@ class ApiTests(unittest.TestCase):
                       status=200,
                       content_type='application/json')
 
-        responses.add(responses.PUT,
+        responses.add_callback(responses.PUT,
                       CsaAPI._build_end_point_uri('/users/update/:id',
                                                     {':id': '39'}),
-                      status=200,
+                      callback=check_payload,
                       content_type='application/json')
 
         fixture = json.loads(load_fixture('users/show/39.json'))
@@ -302,11 +316,10 @@ class ApiTests(unittest.TestCase):
 
         api = CsaAPI("cwl39", 'taliesin')
         user = api.get_user(39)
-        user.grad_year = 1986
+        user["grad_year"] = 1986
         api.update_user(user)
 
         responses.reset()
-        fixture = json.loads(load_fixture('users/show/39.json'))
         fixture["grad_year"] = 1986
         responses.add(responses.GET,
                       CsaAPI._build_end_point_uri('/users/show/:id',
@@ -415,3 +428,71 @@ class ApiTests(unittest.TestCase):
 
         api = CsaAPI("cwl39", 'taliesin')
         response = api.search()
+
+
+    @responses.activate
+    def test_get_broadcast(self):
+        responses.reset()
+
+        fixture = load_fixture("broadcasts/1.json")
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 39}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/broadcasts/show/:id',
+                                                 {':id': '1'}),
+                      body=fixture,
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        broadcast = api.get_broadcast(1)
+        nose.tools.assert_dict_equal(json.loads(fixture), broadcast)
+
+    @responses.activate
+    def test_destory_broadcast(self):
+        responses.reset()
+
+        def assert_delete(request):
+            nose.tools.assert_equal(responses.DELETE, request.method)
+            return (200, {}, {})
+
+        fixture = load_fixture("broadcasts/1.json")
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 39}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add_callback(responses.DELETE,
+                      CsaAPI._build_end_point_uri('/broadcasts/destroy/:id',
+                                                 {':id': '1'}),
+                      callback=assert_delete,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        broadcast = api.destroy_broadcast(1)
+
+    @responses.activate
+    def test_get_broadcasts(self):
+        responses.reset()
+
+        fixture = load_fixture("broadcasts.json")
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 39}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/broadcasts'),
+                      body=fixture,
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        broadcasts = api.get_broadcasts()
+        nose.tools.assert_list_equal(json.loads(fixture), broadcasts)

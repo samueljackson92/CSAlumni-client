@@ -14,7 +14,13 @@ CONTENT_TYPE = 'json'
 END_POINTS = {
     "/users/verify": "GET",
     "/users/search": "GET",
+    "/users/create": "POST",
     "/users/show/:id": "GET",
     "/users/update/:id": "PUT",
     "/users/destory/:id": "DELETE",
+
+    "/broadcasts": "GET",
+    "/broadcasts/create": "POST",
+    "/broadcasts/show/:id": "GET",
+    "/broadcasts/destroy/:id": "DELETE",
 }
