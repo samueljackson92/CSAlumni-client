@@ -28,6 +28,13 @@ class CsaAPI(object):
     # User request helpers
     ###########################################################################
 
+    def create_user(self, user):
+        """Create a new user
+
+        :param user: the user object to create
+        """
+        self.make_request('/users/create', params=user)
+
     def get_user(self, user_id=None):
         """Get a user record as an object
 
@@ -65,6 +72,13 @@ class CsaAPI(object):
     ###########################################################################
     # Broadcast request helpers
     ###########################################################################
+
+    def create_broadcast(self, broadcast):
+        """Create a new broadcast
+
+        :param broadcast: the broadcast object to create
+        """
+        self.make_request('/broadcasts/create', params=broadcast)
 
     def get_broadcast(self, broadcast_id):
         """Get a broadcast record

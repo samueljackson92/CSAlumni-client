@@ -128,6 +128,33 @@ class ApiTests(unittest.TestCase):
         api = CsaAPI("admin", "not_a_password")
         resp = api.make_request("/users/show/:id", {':id':'41'})
 
+    ##########################################################################
+    # User tests
+    ##########################################################################
+
+    @responses.activate
+    def test_create_user(self):
+        responses.reset()
+
+        fixture = load_fixture("users/show/39.json")
+        fixture = json.loads(fixture)
+        def check_user_was_created(request):
+            nose.tools.assert_equal(fixture, json.loads(request.body))
+            return (200, {}, {})
+
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 41}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add_callback(responses.POST,
+                      CsaAPI._build_end_point_uri('/users/create'),
+                      callback=check_user_was_created,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        api.create_user(fixture)
 
     @responses.activate
     def test_request_can_view_user(self):
@@ -430,6 +457,34 @@ class ApiTests(unittest.TestCase):
         response = api.search()
 
 
+    ##########################################################################
+    # Broadcast tests
+    ##########################################################################
+
+    @responses.activate
+    def test_create_broadcast(self):
+        responses.reset()
+
+        fixture = load_fixture("broadcasts/1.json")
+        fixture = json.loads(fixture)
+        def check_broadcast_was_created(request):
+            nose.tools.assert_dict_equal(fixture, json.loads(request.body))
+            return (200, {}, {})
+
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 41}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add_callback(responses.POST,
+                      CsaAPI._build_end_point_uri('/broadcasts/create'),
+                      callback=check_broadcast_was_created,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        api.create_broadcast(fixture)
+
     @responses.activate
     def test_get_broadcast(self):
         responses.reset()
@@ -437,7 +492,7 @@ class ApiTests(unittest.TestCase):
         fixture = load_fixture("broadcasts/1.json")
         responses.add(responses.GET,
                       CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
+                      body="{\"id\": 41}",
                       status=200,
                       content_type='application/json')
 
@@ -463,7 +518,7 @@ class ApiTests(unittest.TestCase):
         fixture = load_fixture("broadcasts/1.json")
         responses.add(responses.GET,
                       CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
+                      body="{\"id\": 41}",
                       status=200,
                       content_type='application/json')
 
@@ -483,7 +538,7 @@ class ApiTests(unittest.TestCase):
         fixture = load_fixture("broadcasts.json")
         responses.add(responses.GET,
                       CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
+                      body="{\"id\": 41}",
                       status=200,
                       content_type='application/json')
 
