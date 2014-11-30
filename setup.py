@@ -11,7 +11,11 @@ config = {
     'author_email': 'samueljackson@outlook.com',
     'version': '0.1.0',
     'install_requires': ['nose', 'requests', 'responses', 'coverage', 'click'],
-    'packages': ['csa_api'],
+    'entry_points': '''
+        [console_scripts]
+        csa_client=csa_client.command:cli
+    ''',
+    'packages': ['csa_client'],
     'scripts': [],
     'name': 'csa_client'
 }

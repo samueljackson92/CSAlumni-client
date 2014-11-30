@@ -5,10 +5,12 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2014 Samuel Jackson'
 
 try:
-    from .csa_api import CsaAPI
+    from .api import CsaAPI
+    from .command import cli
 except:
     pass
 
 __all__ = [
     'CsaAPI'
+    'cli'
 ]

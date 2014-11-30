@@ -1,4 +1,4 @@
-from csa_api import CsaAPI, constants
+from csa_client import CsaAPI, constants
 
 import unittest
 import nose.tools
