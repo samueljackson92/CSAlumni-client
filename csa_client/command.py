@@ -100,9 +100,40 @@ def destroy(ctx, user_id):
     ctx.obj.destroy_user(user_id)
     click.echo("User destoryed.")
 
-def cli():
+##############################################################################
+# Broadcast's group commands
+##############################################################################
+
+@cli.group()
+@click.pass_context
+def broadcasts(ctx):
+    """Users group init function"""
     pass
 
-@cli.command()
-def login():
-    click.echo('Not implemented')
+@broadcasts.command()
+@click.argument('content', type=str)
+@click.option('--feeds', '-f', multiple=True, type=str)
+@click.pass_context
+def create(ctx, content, feeds):
+    user = ctx.obj.get_user()
+    broadcast = {'user_id': user['id'], 'content': content}
+    broadcast_params = {'broadcast': broadcast, 'feeds': feeds}
+    ctx.obj.create_broadcast(broadcast_params)
+    click.echo("Broadcast created.")
+
+@broadcasts.command()
+@click.pass_context
+def show(ctx):
+    """ Search for users """
+    broadcasts_list = ctx.obj.get_broadcasts()
+    print_multiple_entries(broadcasts_list, ['user_id', 'content', 'url'])
+
+@broadcasts.command()
+@click.argument('broadcast-id', type=int)
+@click.pass_context
+def destroy(ctx, broadcast_id):
+    ctx.obj.destroy_broadcast(broadcast_id)
+    click.echo("Broadcast destoryed.")
+
+if __name__ == "__main__":
+    cli(obj={})
