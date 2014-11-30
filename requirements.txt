@@ -1,3 +1,5 @@
 coverage
 requests
 responses
+cython
+kivy
