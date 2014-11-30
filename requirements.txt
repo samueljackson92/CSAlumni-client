@@ -1,5 +1,4 @@
 coverage
 requests
 responses
-cython==0.17.1
 kivy
