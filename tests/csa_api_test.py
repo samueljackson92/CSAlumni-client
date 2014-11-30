@@ -5,6 +5,8 @@ import nose.tools
 import requests
 import responses
 import json
+
+from requests.exceptions import HTTPError
 from test_helpers import *
 
 class ApiTests(unittest.TestCase):
@@ -551,3 +553,23 @@ class ApiTests(unittest.TestCase):
         api = CsaAPI("admin", 'taliesin')
         broadcasts = api.get_broadcasts()
         nose.tools.assert_list_equal(json.loads(fixture), broadcasts)
+
+    @responses.activate
+    @nose.tools.raises(requests.exceptions.HTTPError)
+    def test_make_coffee(self):
+        responses.reset()
+
+        responses.add(responses.GET,
+                      CsaAPI._build_end_point_uri('/users/verify'),
+                      body="{\"id\": 41}",
+                      status=200,
+                      content_type='application/json')
+
+        responses.add('BREW',
+                      CsaAPI._build_end_point_uri('/coffee'),
+                      body=HTTPError('I\'m a teapot'),
+                      status=418,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        response = api.make_coffee()

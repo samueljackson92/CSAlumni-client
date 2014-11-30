@@ -108,6 +108,9 @@ class CsaAPI(object):
         json_reponse = response.json()
         self.user_id = json_reponse["id"]
 
+    def make_coffee(self):
+        return self.make_request('/coffee')
+
     def make_request(self, end_point, end_point_vars={}, params={}):
         """Make a request to Csa API at the specified end point
 

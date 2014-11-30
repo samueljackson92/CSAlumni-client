@@ -23,4 +23,6 @@ END_POINTS = {
     "/broadcasts/create": "POST",
     "/broadcasts/show/:id": "GET",
     "/broadcasts/destroy/:id": "DELETE",
+
+    "/coffee": "BREW"
 }
