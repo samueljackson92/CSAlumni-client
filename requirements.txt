@@ -1,4 +1,5 @@
 coverage
 requests
+requests_oauthlib
 responses
 click
