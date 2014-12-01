@@ -4,7 +4,7 @@ __license__ = "MIT"
 
 import os
 
-from csa_api import CsaAPI
+from csa_client import CsaAPI
 
 FIXTURES_FOLDER = "fixtures"
 

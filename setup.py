@@ -10,8 +10,12 @@ config = {
     'download_url': 'http://github.com/samueljackson92/CSAlumni-Client',
     'author_email': 'samueljackson@outlook.com',
     'version': '0.1.0',
-    'install_requires': ['nose', 'requests', 'responses', 'coverage', 'cython==0.17.1', 'kivy'],
-    'packages': ['csa_api'],
+    'install_requires': ['nose', 'requests', 'responses', 'coverage', 'click'],
+    'entry_points': '''
+        [console_scripts]
+        csa_client=csa_client.command:cli
+    ''',
+    'packages': ['csa_client'],
     'scripts': [],
     'name': 'csa_client'
 }

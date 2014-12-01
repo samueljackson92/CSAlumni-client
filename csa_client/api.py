@@ -54,7 +54,7 @@ class CsaAPI(object):
                           end_point_vars={":id": user["id"]},
                           params=user)
 
-    def destory_user(self, user_id=None):
+    def destroy_user(self, user_id=None):
         """Destory a user record
 
         :param user_id: the ide of the user to delete

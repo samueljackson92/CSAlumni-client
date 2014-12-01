@@ -1,4 +1,4 @@
-from csa_api import CsaAPI, constants
+from csa_client import CsaAPI, constants
 
 import unittest
 import nose.tools
@@ -378,7 +378,7 @@ class ApiTests(unittest.TestCase):
                       content_type='application/json')
 
         api = CsaAPI("cwl39", 'taliesin')
-        api.destory_user()
+        api.destroy_user()
 
     @responses.activate
     def test_admin_can_destory(self):
@@ -396,7 +396,7 @@ class ApiTests(unittest.TestCase):
                       content_type='application/json')
 
         api = CsaAPI("admin", 'taliesin')
-        api.destory_user(39)
+        api.destroy_user(39)
 
     @responses.activate
     def test_user_search_no_query(self):
