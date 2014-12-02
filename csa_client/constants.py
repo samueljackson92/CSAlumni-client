@@ -3,15 +3,21 @@ __date__ = "November 26, 2014"
 __license__ = "MIT"
 
 # protocal used by the api
-PROTOCOL = 'http://'
+PROTOCOL = 'https://'
 # domain of the endpoints
 DOMAIN = 'localhost'
 # port of the endpoints
-PORT = '3000'
+PORT = '3001'
 # Content type that the application communicates in
 CONTENT_TYPE = 'json'
+# Whether to verify the ssl certificate of the website
+VERIFY_SSL = False
+
+TOKEN_FILE = '.tokens.json'
 
 END_POINTS = {
+    "/oauth/token": "POST",
+
     "/users/verify": "GET",
     "/users/search": "GET",
     "/users/create": "POST",
