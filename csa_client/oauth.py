@@ -37,8 +37,6 @@ class OAuth2ResourceOwner(RequestHandler):
         response = self.make_request(self.token_endpoint, params=payload)
         json_response = response.json()
 
-        print json_response
-
         if 'access_token' not in json_response:
             raise ValueError("Access token not present in response!")
 
