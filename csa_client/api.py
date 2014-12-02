@@ -19,7 +19,7 @@ class CsaAPI(object):
             self.session.set_tokens(TokenCache.load_tokens())
         else:
             self.session.request_auth_with_client_credentials(username, password)
-            
+
     ###########################################################################
     # User request helpers
     ###########################################################################
@@ -107,11 +107,7 @@ class CsaAPI(object):
         """ Request via BREW """
         return self.session.make_request('/coffee')
 
-
     def __del__(self):
-        try:
-            tokens = self.session.get_tokens()
-            if tokens:
-                TokenCache.cache_tokens(tokens)
-        except AttributeError:
-            pass
+        tokens = self.session.get_tokens()
+        if tokens:
+            TokenCache.cache_tokens(tokens)

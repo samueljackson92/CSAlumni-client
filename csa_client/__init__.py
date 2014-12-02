@@ -5,7 +5,7 @@ __license__ = 'MIT'
 __copyright__ = 'Copyright 2014 Samuel Jackson'
 
 try:
-    from .request_hander import RequestHandler
+    from .request_handler import RequestHandler
     from .api import CsaAPI
     from .oauth import OAuth2ResourceOwner
     from .command import cli
