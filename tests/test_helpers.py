@@ -8,6 +8,7 @@ import responses
 
 from csa_client.request_handler import RequestHandler
 from csa_client.api import CsaAPI
+from csa_client import constants
 
 FIXTURES_FOLDER = "fixtures"
 
@@ -20,12 +21,14 @@ def load_fixture(file_name):
         fixture_text = file_handle.read()
     return fixture_text
 
-def mock_auth_response():
-    body = json.dumps({"access_token": "abcdef", "refresh_token": "abcdef"})
+def mock_auth_response(status=200, body=None):
+    if body is None:
+        body = json.dumps({"access_token": "abcdef", "refresh_token": "abcdef"})
+
     responses.add(responses.POST,
                   RequestHandler._build_end_point_uri('/oauth/token'),
                   body=body,
-                  status=200,
+                  status=status,
                   content_type='application/json')
 
 def mock_show_user_response(user_id, status=200, body=None):

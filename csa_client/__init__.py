@@ -9,12 +9,14 @@ try:
     from .api import CsaAPI
     from .oauth import OAuth2ResourceOwner
     from .command import cli
+    from .constants import *
 except:
     pass
 
 __all__ = [
+    'constants',
     'CsaAPI',
-    'RequestHandler',
-    'OAuth2ResourceOwner',
     'cli'
+    'OAuth2ResourceOwner',
+    'RequestHandler',
 ]

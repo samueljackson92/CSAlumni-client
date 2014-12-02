@@ -81,12 +81,11 @@ class OAuth2ResourceOwner(RequestHandler):
 
     def get_tokens(self):
         """Get dictionary of tokens"""
-        if self.access_token and self.refresh_token:
-            token_data = {
-              'access_token': self.access_token,
-              'refresh_token': self.refresh_token
-            }
-            return token_data
+        token_data = {
+          'access_token': self.access_token,
+          'refresh_token': self.refresh_token
+        }
+        return token_data
 
     def set_tokens(self,token_data):
         """Get dictionary of tokens"""

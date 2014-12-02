@@ -108,6 +108,8 @@ class CsaAPI(object):
         return self.session.make_request('/coffee')
 
     def __del__(self):
-        tokens = self.session.get_tokens()
-        if tokens:
+        try:
+            tokens = self.session.get_tokens()
             TokenCache.cache_tokens(tokens)
+        except AttributeError,e:
+            pass

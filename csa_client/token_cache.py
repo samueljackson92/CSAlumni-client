@@ -11,6 +11,9 @@ class TokenCache(object):
     @staticmethod
     def cache_tokens(token_data):
         """Save oauth tokens to a local file between commands"""
+        if not token_data:
+            raise ValueError("Token data does not exist.")
+
         with open(TOKEN_FILE, 'w') as token_file:
             json.dump(token_data, token_file)
 

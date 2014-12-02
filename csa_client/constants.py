@@ -2,6 +2,8 @@ __author__ = "Samuel Jackson"
 __date__ = "November 26, 2014"
 __license__ = "MIT"
 
+import os
+
 # protocal used by the api
 PROTOCOL = 'https://'
 # domain of the endpoints
@@ -13,7 +15,8 @@ CONTENT_TYPE = 'json'
 # Whether to verify the ssl certificate of the website
 VERIFY_SSL = False
 
-TOKEN_FILE = '.tokens.json'
+# TOKEN_FILE = os.path.join(os.path.expanduser("~"), '.csa_tokens.json')
+TOKEN_FILE = './.csa_tokens.json'
 
 END_POINTS = {
     "/oauth/token": "POST",
