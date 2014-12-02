@@ -1,6 +1,10 @@
 import click
 import datetime
 import json
+import sys
+
+from requests.exceptions import HTTPError
+from token_cache import TokenCache
 from api import CsaAPI
 
 NOW = datetime.datetime.now()
@@ -29,11 +33,30 @@ def print_multiple_entries(json_data, show_keys):
         click.echo(content)
 
 @click.group()
-@click.option('--username', default='')
-@click.option('--password', default='')
 @click.pass_context
-def cli(ctx, username, password):
-    ctx.obj = CsaAPI(username, password)
+def cli(ctx):
+    if not ctx.invoked_subcommand == 'authorize':
+        try:
+            ctx.obj = CsaAPI()
+        except ValueError:
+            click.echo("Could not retrieve tokens from cache. "
+                       "Have you run csa_client authorize ?")
+            sys.exit(1)
+        except HTTPError, e:
+            click.echo(e.message)
+            sys.exit(1)
+
+@cli.command()
+@click.option('--username', prompt='Enter your username',
+              help="Username used to connect to the CsaAPI")
+@click.password_option(help="Password used to connect to the CsaAPI")
+@click.pass_context
+def authorize(ctx, username, password):
+    try:
+        ctx.obj = CsaAPI(username=username, password=password)
+    except HTTPError, e:
+        click.echo(e.message)
+        sys.exit(1)
 
 ##############################################################################
 # User's group commands

@@ -3,6 +3,7 @@ __date__ = "November 26, 2014"
 __license__ = "MIT"
 
 from oauth import OAuth2ResourceOwner
+from token_cache import TokenCache
 from constants import *
 
 class CsaAPI(object):
@@ -11,14 +12,14 @@ class CsaAPI(object):
     :param username: CSA application username
     :param password: CSA application password
     """
-    def __init__(self, username=None, password=None):
+    def __init__(self,username=None, password=None):
         self.session = OAuth2ResourceOwner('/oauth/token')
 
         if username is None and password is None:
-            self.session.load_tokens()
+            self.session.set_tokens(TokenCache.load_tokens())
         else:
             self.session.request_auth_with_client_credentials(username, password)
-
+            
     ###########################################################################
     # User request helpers
     ###########################################################################
@@ -102,16 +103,15 @@ class CsaAPI(object):
     # Misc
     ###########################################################################
 
-    def verify(self):
-        """Verify a user can log in and get their user id"""
-        response = self.session.make_request('/users/verify', params={'access_token': self.access_token})
-        json_reponse = response.json()
-        self.user_id = json_reponse["id"]
-
     def make_coffee(self):
         """ Request via BREW """
         return self.session.make_request('/coffee')
 
 
     def __del__(self):
-        self.session.cache_tokens()
+        try:
+            tokens = self.session.get_tokens()
+            if tokens:
+                TokenCache.cache_tokens(tokens)
+        except AttributeError:
+            pass

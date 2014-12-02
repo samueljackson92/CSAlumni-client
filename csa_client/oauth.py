@@ -17,7 +17,7 @@ class OAuth2ResourceOwner(RequestHandler):
     obtained and can be cached locally. This class will automatically handle
     refreshing the tokens ase required. See RFC6749 for more info.
 
-    :param token_endpoint: the end point to request oauth2 tokens from. 
+    :param token_endpoint: the end point to request oauth2 tokens from.
     """
     def __init__(self, token_endpoint):
         super(OAuth2ResourceOwner, self).__init__()
@@ -37,11 +37,13 @@ class OAuth2ResourceOwner(RequestHandler):
         response = self.make_request(self.token_endpoint, params=payload)
         json_response = response.json()
 
+        print json_response
+
         if 'access_token' not in json_response:
             raise ValueError("Access token not present in response!")
 
         if 'refresh_token' not in json_response:
-            raise ValueError("Referesh token not present in response!")
+            raise ValueError("Refresh token not present in response!")
 
         self._refresh_auth_state(json_response)
 
@@ -69,30 +71,28 @@ class OAuth2ResourceOwner(RequestHandler):
         response = super(OAuth2ResourceOwner, self) \
                         .make_request(end_point, end_point_vars, params)
 
+
         if response.status_code == requests.codes.unauthorized:
-            self.request_auth_with_refresh_token()
-            response = super(OAuth2ResourceOwner, self) \
-                            .make_request(end_point, end_point_vars, params)
+            if not 'error' in response.text:
+                self.request_auth_with_refresh_token()
+                response = super(OAuth2ResourceOwner, self) \
+                                .make_request(end_point, end_point_vars, params)
 
         response.raise_for_status()
         return response
 
-    def cache_tokens(self):
-        """Save oauth tokens to a local file between commands"""
-        token_data = {
-            'access_token': self.access_token,
-            'refresh_token': self.refresh_token
-        }
+    def get_tokens(self):
+        """Get dictionary of tokens"""
+        if self.access_token and self.refresh_token:
+            token_data = {
+              'access_token': self.access_token,
+              'refresh_token': self.refresh_token
+            }
+            return token_data
 
-        with open(TOKEN_FILE, 'w') as token_file:
-            json.dump(token_data, token_file)
-
-    def load_tokens(self):
-        """Load oauth tokens cached in a local file"""
-        with open(TOKEN_FILE, 'r') as token_file:
-            token_data = json.load(token_file)
-            print token_data
-            self._refresh_auth_state(token_data)
+    def set_tokens(self,token_data):
+        """Get dictionary of tokens"""
+        self._refresh_auth_state(token_data)
 
     def _refresh_auth_state(self, tokens):
         """Refresh the access tokens used to authenticate requests
