@@ -102,8 +102,8 @@ class ApiTests(unittest.TestCase):
             nose.tools.assert_equal(fixture, body)
             return (200, {}, {})
 
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
+
+        mock_auth_response()
 
         responses.add_callback(responses.POST,
                       RequestHandler._build_end_point_uri('/users/create'),
@@ -115,88 +115,45 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_request_can_view_user(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=load_fixture('users/show/39.json'),
-                      status=200,
-                      content_type='application/json')
+        mock_auth_response()
+        fixture = mock_show_user_response(39)
 
         api = CsaAPI("cwl39", 'taliesin')
         resp = api.get_user(39)
 
-
-        nose.tools.assert_equal("Firstname39", resp["firstname"])
-        nose.tools.assert_equal("Surname39", resp["surname"])
-        nose.tools.assert_equal(1985, resp["grad_year"])
-        nose.tools.assert_equal("01970 622422", resp["phone"])
-        nose.tools.assert_equal("cwl39@aber.ac.uk", resp["email"])
-        nose.tools.assert_equal(True, resp["jobs"])
-        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["created_at"])
-        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["updated_at"])
+        nose.tools.assert_dict_equal(fixture, resp)
 
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_request_cannot_view_other_user(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '41'}),
-                      body='',
-                      status=403,
-                      content_type='application/json')
+        mock_auth_response()
+        mock_show_user_response(41, status=403)
 
         api = CsaAPI("cwl39", 'taliesin')
-        resp = api.get_user('41')
+        resp = api.get_user(41)
 
     @responses.activate
     def test_request_admin_can_view_user(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
-
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=load_fixture('users/show/39.json'),
-                      status=200,
-                      content_type='application/json')
+        mock_auth_response()
+        fixture = mock_show_user_response(39)
 
         api = CsaAPI("admin", 'taliesin')
-        resp = api.get_user('39')
+        resp = api.get_user(39)
 
-        nose.tools.assert_equal("Firstname39", resp["firstname"])
-        nose.tools.assert_equal("Surname39", resp["surname"])
-        nose.tools.assert_equal(1985, resp["grad_year"])
-        nose.tools.assert_equal("01970 622422", resp["phone"])
-        nose.tools.assert_equal("cwl39@aber.ac.uk", resp["email"])
-        nose.tools.assert_equal(True, resp["jobs"])
-        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["created_at"])
-        nose.tools.assert_equal("2013-09-04T13:51:00.311Z", resp["updated_at"])
+        nose.tools.assert_dict_equal(fixture, resp)
 
     @responses.activate
     def test_user_can_update_self(self):
+        # Mock requests for auth, get user
+        mock_auth_response()
+        fixture = mock_show_user_response(39)
 
+        # Mock update request to modify the fixture
         def check_payload(request):
             payload = json.loads(request.body)
             nose.tools.assert_equal(1986, payload["grad_year"])
+            fixture['grad_year'] = payload["grad_year"]
             return (200, {}, {})
-
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
-
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=load_fixture('users/show/39.json'),
-                      status=200,
-                      content_type='application/json')
 
         responses.add_callback(responses.PUT,
                       RequestHandler._build_end_point_uri('/users/update/:id',
@@ -205,38 +162,25 @@ class ApiTests(unittest.TestCase):
                       content_type='application/json')
 
 
+        # Get the user and make some changes
         api = CsaAPI("cwl39", 'taliesin')
         user = api.get_user(39)
         user["grad_year"] = 1986
         api.update_user(user)
 
+        # Mock the updated user response
         responses.reset()
-        fixture = json.loads(load_fixture('users/show/39.json'))
-        fixture["grad_year"] = 1986
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=json.dumps(fixture),
-                      status=200,
-                      content_type='application/json')
+        mock_show_user_response(39, body=json.dumps(fixture))
 
-
+        # Check it matches
         resp = api.get_user(39)
         nose.tools.assert_equal(1986, resp["grad_year"])
 
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_user_cannot_update_other_user(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
-
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '41'}),
-                      body=load_fixture('users/show/41.json'),
-                      status=200,
-                      content_type='application/json')
+        mock_auth_response()
+        mock_show_user_response(41)
 
         responses.add(responses.PUT,
                       RequestHandler._build_end_point_uri('/users/update/:id',
@@ -251,24 +195,15 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_admin_can_update_other_user(self):
+        mock_auth_response()
+        fixture = mock_show_user_response(39)
 
+        # Mock update request to modify the fixture
         def check_payload(request):
             payload = json.loads(request.body)
+            fixture["grad_year"] = payload["grad_year"]
             nose.tools.assert_equal(1986, payload["grad_year"])
             return (200, {}, {})
-
-        fixture = json.loads(load_fixture('users/show/39.json'))
-
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
-
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=load_fixture('users/show/39.json'),
-                      status=200,
-                      content_type='application/json')
 
         responses.add_callback(responses.PUT,
                       RequestHandler._build_end_point_uri('/users/update/:id',
@@ -276,29 +211,18 @@ class ApiTests(unittest.TestCase):
                       callback=check_payload,
                       content_type='application/json')
 
-        fixture = json.loads(load_fixture('users/show/39.json'))
-        fixture["grad_year"] = 1986
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=str(fixture),
-                      status=200,
-                      content_type='application/json')
 
-        api = CsaAPI("cwl39", 'taliesin')
+        # Get the user and make some changes
+        api = CsaAPI("admin", 'taliesin')
         user = api.get_user(39)
         user["grad_year"] = 1986
         api.update_user(user)
 
+        # Mock the updated user response
         responses.reset()
-        fixture["grad_year"] = 1986
-        responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/users/show/:id',
-                                                    {':id': '39'}),
-                      body=json.dumps(fixture),
-                      status=200,
-                      content_type='application/json')
+        mock_show_user_response(39, body=json.dumps(fixture))
 
+        # Check it matches
         resp = api.get_user(39)
         nose.tools.assert_equal(1986, resp["grad_year"])
 
@@ -306,9 +230,7 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_user_cannot_destroy(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         responses.add(responses.DELETE,
                       RequestHandler._build_end_point_uri('/users/destory/:id',
@@ -321,9 +243,7 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_admin_can_destory(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         responses.add(responses.DELETE,
                       RequestHandler._build_end_point_uri('/users/destory/:id',
@@ -336,9 +256,7 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_user_search_no_query(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         search_fixture = json.loads(load_fixture('users/search.json'))
         responses.add(responses.GET,
@@ -354,9 +272,7 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_user_search_with_query(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         search_fixture = json.loads(load_fixture('users/search.json'))
         search_fixture = search_fixture[:1]
@@ -373,8 +289,7 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_user_cannot_search(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
+        mock_auth_response()
 
         responses.add(responses.GET,
                       RequestHandler._build_end_point_uri('/users/search'),
@@ -391,11 +306,11 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_create_broadcast(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
+        mock_auth_response()
 
         fixture = load_fixture("broadcasts/1.json")
         fixture = json.loads(fixture)
+
         def check_broadcast_was_created(request):
             body = json.loads(request.body)
             fixture.update({'access_token': body['access_token']})
@@ -412,9 +327,7 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_get_broadcast(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         fixture = load_fixture("broadcasts/1.json")
         responses.add(responses.GET,
@@ -430,9 +343,7 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_destory_broadcast(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         def assert_delete(request):
             nose.tools.assert_equal(responses.DELETE, request.method)
@@ -450,8 +361,7 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_get_broadcasts(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
+        mock_auth_response()
 
         fixture = load_fixture("broadcasts.json")
         responses.add(responses.GET,
@@ -467,9 +377,7 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_make_coffee(self):
-        args, kwargs = mock_auth_response()
-        responses.add(*args, **kwargs)
-
+        mock_auth_response()
 
         responses.add('BREW',
                       RequestHandler._build_end_point_uri('/coffee'),
