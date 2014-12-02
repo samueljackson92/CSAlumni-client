@@ -1,4 +1,6 @@
-from csa_client import CsaAPI, constants
+
+from csa_client import constants
+from csa_client.api import CsaAPI
 
 import unittest
 import nose.tools
@@ -11,124 +13,77 @@ from test_helpers import *
 
 class ApiTests(unittest.TestCase):
 
-    def setUp(self):
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
-
-        self._default_user_name = "admin"
-        self._default_password = "taliesin"
-
-    @responses.activate
-    def test_create_api_handle(self):
-        api = CsaAPI(self._default_user_name, self._default_password)
-        nose.tools.assert_is_not_none(api)
+    def tearDown(self):
+        responses.reset()
 
     @responses.activate
     def test_build_end_point_uri(self):
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
         constants.CONTENT_TYPE = 'json'
 
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_end_point_uri("/home/index")
-        nose.tools.assert_equal('http://localhost:3000/home/index.json', uri)
+        uri = RequestHandler._build_end_point_uri("/home/index")
+        nose.tools.assert_equal('https://localhost:3001/home/index.json', uri)
 
     @nose.tools.raises(KeyError)
     def test_build_invalid_end_point_uri(self):
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
         constants.CONTENT_TYPE = 'json'
 
-        uri = CsaAPI._build_end_point_uri("/home/index")
+        uri = RequestHandler._build_end_point_uri("/home/index")
 
     @responses.activate
     def test_build_end_point_uri_with_vars(self):
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
         constants.CONTENT_TYPE = 'json'
 
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_end_point_uri("/users/show/:id", params={':id': '42'})
-        nose.tools.assert_equal('http://localhost:3000/users/show/42.json', uri)
+        uri = RequestHandler._build_end_point_uri("/users/show/:id", params={':id': '42'})
+        nose.tools.assert_equal('https://localhost:3001/users/show/42.json', uri)
 
     @nose.tools.raises(ValueError)
     def test_build_end_point_uri_with_vars_and_no_params(self):
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
         constants.CONTENT_TYPE = 'json'
 
-        uri = CsaAPI._build_end_point_uri("/users/show/:id", params={})
+        uri = RequestHandler._build_end_point_uri("/users/show/:id", params={})
 
     @responses.activate
     def test_build_end_point_uri_with_no_vars_and_params(self):
         # This should pass becuase the supplied parameters are ignored.
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
         constants.CONTENT_TYPE = 'json'
 
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_end_point_uri("/users/search", params={':id': '42'})
-        nose.tools.assert_equal('http://localhost:3000/users/search.json', uri)
+        uri = RequestHandler._build_end_point_uri("/users/search", params={':id': '42'})
+        nose.tools.assert_equal('https://localhost:3001/users/search.json', uri)
 
     @responses.activate
     def test_build_end_point_uri_with_numeric_param(self):
         # This should pass becuase the supplied parameters are ignored.
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
         constants.CONTENT_TYPE = 'json'
 
-
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_end_point_uri("/users/search", params={':id': 42})
-        nose.tools.assert_equal('http://localhost:3000/users/search.json', uri)
+        uri = RequestHandler._build_end_point_uri("/users/search", params={':id': 42})
+        nose.tools.assert_equal('https://localhost:3001/users/search.json', uri)
 
     @responses.activate
     def test_build_end_point_uri(self):
-        constants.PROTOCOL = 'http://'
+        constants.PROTOCOL = 'https://'
         constants.DOMAIN = 'localhost'
-        constants.PORT = '3000'
+        constants.PORT = '3001'
 
-        api = CsaAPI(self._default_user_name, self._default_password)
-        uri = api._build_domain_address()
-        nose.tools.assert_equal('http://localhost:3000', uri)
-
-    @responses.activate
-    def test_connect_with_HTTP_auth(self):
-
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
-                                                    {':id': '41'}),
-                      body=load_fixture('users/show/41.json'),
-                      status=200,
-                      content_type='application/json')
-
-        api = CsaAPI("admin", "taliesin")
-        resp = api.make_request("/users/show/:id", {':id':'41'})
-        json_response = resp.json()
-        nose.tools.assert_equal("Loftus", json_response["surname"])
-
-    @responses.activate
-    @nose.tools.raises(requests.exceptions.HTTPError)
-    def test_fail_to_connect_with_HTTP_auth(self):
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
-                                                    {':id': '41'}),
-                      body='',
-                      status=403,
-                      content_type='application/json')
-
-        #connect using an invalid password
-        api = CsaAPI("admin", "not_a_password")
-        resp = api.make_request("/users/show/:id", {':id':'41'})
+        uri = RequestHandler._build_domain_address()
+        nose.tools.assert_equal('https://localhost:3001', uri)
 
     ##########################################################################
     # User tests
@@ -141,17 +96,16 @@ class ApiTests(unittest.TestCase):
         fixture = load_fixture("users/show/39.json")
         fixture = json.loads(fixture)
         def check_user_was_created(request):
-            nose.tools.assert_equal(fixture, json.loads(request.body))
+            body = json.loads(request.body)
+            fixture.update({'access_token': body['access_token']})
+            nose.tools.assert_equal(fixture, body)
             return (200, {}, {})
 
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
 
         responses.add_callback(responses.POST,
-                      CsaAPI._build_end_point_uri('/users/create'),
+                      RequestHandler._build_end_point_uri('/users/create'),
                       callback=check_user_was_created,
                       content_type='application/json')
 
@@ -160,22 +114,18 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_request_can_view_user(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
 
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=load_fixture('users/show/39.json'),
                       status=200,
                       content_type='application/json')
 
         api = CsaAPI("cwl39", 'taliesin')
-        resp = api.get_user()
+        resp = api.get_user(39)
 
 
         nose.tools.assert_equal("Firstname39", resp["firstname"])
@@ -190,8 +140,11 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_request_cannot_view_other_user(self):
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '41'}),
                       body='',
                       status=403,
@@ -202,15 +155,12 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_request_admin_can_view_user(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=load_fixture('users/show/39.json'),
                       status=200,
@@ -230,35 +180,32 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_user_can_update_self(self):
-        responses.reset()
 
         def check_payload(request):
             payload = json.loads(request.body)
             nose.tools.assert_equal(1986, payload["grad_year"])
             return (200, {}, {})
 
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=load_fixture('users/show/39.json'),
                       status=200,
                       content_type='application/json')
 
         responses.add_callback(responses.PUT,
-                      CsaAPI._build_end_point_uri('/users/update/:id',
+                      RequestHandler._build_end_point_uri('/users/update/:id',
                                                     {':id': '39'}),
                       callback=check_payload,
                       content_type='application/json')
 
 
         api = CsaAPI("cwl39", 'taliesin')
-        user = api.get_user()
+        user = api.get_user(39)
         user["grad_year"] = 1986
         api.update_user(user)
 
@@ -266,35 +213,32 @@ class ApiTests(unittest.TestCase):
         fixture = json.loads(load_fixture('users/show/39.json'))
         fixture["grad_year"] = 1986
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=json.dumps(fixture),
                       status=200,
                       content_type='application/json')
 
 
-        resp = api.get_user()
+        resp = api.get_user(39)
         nose.tools.assert_equal(1986, resp["grad_year"])
 
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_user_cannot_update_other_user(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '41'}),
                       body=load_fixture('users/show/41.json'),
                       status=200,
                       content_type='application/json')
 
         responses.add(responses.PUT,
-                      CsaAPI._build_end_point_uri('/users/update/:id',
+                      RequestHandler._build_end_point_uri('/users/update/:id',
                                                     {':id': '41'}),
                       status=422,
                       content_type='application/json')
@@ -306,7 +250,6 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_admin_can_update_other_user(self):
-        responses.reset()
 
         def check_payload(request):
             payload = json.loads(request.body)
@@ -315,21 +258,19 @@ class ApiTests(unittest.TestCase):
 
         fixture = json.loads(load_fixture('users/show/39.json'))
 
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=load_fixture('users/show/39.json'),
                       status=200,
                       content_type='application/json')
 
         responses.add_callback(responses.PUT,
-                      CsaAPI._build_end_point_uri('/users/update/:id',
+                      RequestHandler._build_end_point_uri('/users/update/:id',
                                                     {':id': '39'}),
                       callback=check_payload,
                       content_type='application/json')
@@ -337,7 +278,7 @@ class ApiTests(unittest.TestCase):
         fixture = json.loads(load_fixture('users/show/39.json'))
         fixture["grad_year"] = 1986
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=str(fixture),
                       status=200,
@@ -351,7 +292,7 @@ class ApiTests(unittest.TestCase):
         responses.reset()
         fixture["grad_year"] = 1986
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/show/:id',
+                      RequestHandler._build_end_point_uri('/users/show/:id',
                                                     {':id': '39'}),
                       body=json.dumps(fixture),
                       status=200,
@@ -364,33 +305,27 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_user_cannot_destroy(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         responses.add(responses.DELETE,
-                      CsaAPI._build_end_point_uri('/users/destory/:id',
+                      RequestHandler._build_end_point_uri('/users/destory/:id',
                                                     {':id': '39'}),
                       status=422,
                       content_type='application/json')
 
         api = CsaAPI("cwl39", 'taliesin')
-        api.destroy_user()
+        api.destroy_user(39)
 
     @responses.activate
     def test_admin_can_destory(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         responses.add(responses.DELETE,
-                      CsaAPI._build_end_point_uri('/users/destory/:id',
+                      RequestHandler._build_end_point_uri('/users/destory/:id',
                                                     {':id': '39'}),
                       status=200,
                       content_type='application/json')
@@ -400,16 +335,13 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_user_search_no_query(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         search_fixture = json.loads(load_fixture('users/search.json'))
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/search'),
+                      RequestHandler._build_end_point_uri('/users/search'),
                       body=json.dumps(search_fixture),
                       status=200,
                       content_type='application/json')
@@ -421,17 +353,14 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_user_search_with_query(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         search_fixture = json.loads(load_fixture('users/search.json'))
         search_fixture = search_fixture[:1]
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/search'),
+                      RequestHandler._build_end_point_uri('/users/search'),
                       body=json.dumps(search_fixture),
                       status=200,
                       content_type='application/json')
@@ -443,15 +372,11 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_user_cannot_search(self):
-        responses.reset()
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 39}",
-                      status=200,
-                      content_type='application/json')
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
 
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/search'),
+                      RequestHandler._build_end_point_uri('/users/search'),
                       status=422,
                       content_type='application/json')
 
@@ -465,22 +390,19 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_create_broadcast(self):
-        responses.reset()
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
 
         fixture = load_fixture("broadcasts/1.json")
         fixture = json.loads(fixture)
         def check_broadcast_was_created(request):
-            nose.tools.assert_dict_equal(fixture, json.loads(request.body))
+            body = json.loads(request.body)
+            fixture.update({'access_token': body['access_token']})
+            nose.tools.assert_dict_equal(fixture, body)
             return (200, {}, {})
 
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
-
         responses.add_callback(responses.POST,
-                      CsaAPI._build_end_point_uri('/broadcasts/create'),
+                      RequestHandler._build_end_point_uri('/broadcasts/create'),
                       callback=check_broadcast_was_created,
                       content_type='application/json')
 
@@ -489,17 +411,13 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_get_broadcast(self):
-        responses.reset()
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         fixture = load_fixture("broadcasts/1.json")
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
-
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/broadcasts/show/:id',
+                      RequestHandler._build_end_point_uri('/broadcasts/show/:id',
                                                  {':id': '1'}),
                       body=fixture,
                       status=200,
@@ -511,21 +429,17 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_destory_broadcast(self):
-        responses.reset()
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
+
 
         def assert_delete(request):
             nose.tools.assert_equal(responses.DELETE, request.method)
             return (200, {}, {})
 
         fixture = load_fixture("broadcasts/1.json")
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
-
         responses.add_callback(responses.DELETE,
-                      CsaAPI._build_end_point_uri('/broadcasts/destroy/:id',
+                      RequestHandler._build_end_point_uri('/broadcasts/destroy/:id',
                                                  {':id': '1'}),
                       callback=assert_delete,
                       content_type='application/json')
@@ -535,17 +449,12 @@ class ApiTests(unittest.TestCase):
 
     @responses.activate
     def test_get_broadcasts(self):
-        responses.reset()
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
 
         fixture = load_fixture("broadcasts.json")
         responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
-
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/broadcasts'),
+                      RequestHandler._build_end_point_uri('/broadcasts'),
                       body=fixture,
                       status=200,
                       content_type='application/json')
@@ -557,16 +466,12 @@ class ApiTests(unittest.TestCase):
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)
     def test_make_coffee(self):
-        responses.reset()
+        args, kwargs = mock_auth_response()
+        responses.add(*args, **kwargs)
 
-        responses.add(responses.GET,
-                      CsaAPI._build_end_point_uri('/users/verify'),
-                      body="{\"id\": 41}",
-                      status=200,
-                      content_type='application/json')
 
         responses.add('BREW',
-                      CsaAPI._build_end_point_uri('/coffee'),
+                      RequestHandler._build_end_point_uri('/coffee'),
                       body=HTTPError('I\'m a teapot'),
                       status=418,
                       content_type='application/json')

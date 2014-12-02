@@ -14,6 +14,7 @@ except:
 
 __all__ = [
     'CsaAPI',
+    'RequestHandler',
     'OAuth2ResourceOwner',
     'cli'
 ]

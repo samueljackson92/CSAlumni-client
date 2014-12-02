@@ -3,8 +3,11 @@ __date__ = "November 26, 2014"
 __license__ = "MIT"
 
 import os
+import json
+import responses
 
-from csa_client import CsaAPI
+from csa_client.request_handler import RequestHandler
+from csa_client.api import CsaAPI
 
 FIXTURES_FOLDER = "fixtures"
 
@@ -18,24 +21,6 @@ def load_fixture(file_name):
     return fixture_text
 
 
-def mock_verify_response(responses, user_id):
-    responses.add(responses.GET,
-                  CsaAPI._build_end_point_uri('/users/verify'),
-                  body="{\"id\": \"%s\"}" % str(user_id),
-                  status=200,
-                  content_type='application/json')
-
-def mock_show_user_response(responses, user_id, fixture):
-    responses.add(responses.GET,
-                  CsaAPI._build_end_point_uri('/users/show/:id',
-                                                {':id': user_id}),
-                  body=fixture,
-                  status=200,
-                  content_type='application/json')
-
-def mock_update_user_response(responses, user_id):
-    responses.add(responses.PUT,
-                  CsaAPI._build_end_point_uri('/users/update/:id',
-                                                {':id': user_id}),
-                  status=200,
-                  content_type='application/json')
+def mock_auth_response():
+    body = json.dumps({"access_token": "abcdef", "refresh_token": "abcdef"})
+    return (responses.POST, RequestHandler._build_end_point_uri('/oauth/token')), {'status':200, 'content_type':'application/json', 'body': body}
