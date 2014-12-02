@@ -1,20 +1,21 @@
-
-from csa_client import constants
-from csa_client.api import CsaAPI
-
 import unittest
 import nose.tools
 import requests
 import responses
 import json
+import os
 
 from requests.exceptions import HTTPError
 from test_helpers import *
+from csa_client import constants
+from csa_client.api import CsaAPI
 
 class ApiTests(unittest.TestCase):
 
     def tearDown(self):
         responses.reset()
+        if os.path.isfile(constants.TOKEN_FILE):
+            os.remove(constants.TOKEN_FILE)
 
     @responses.activate
     def test_build_end_point_uri(self):
