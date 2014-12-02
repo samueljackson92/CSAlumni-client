@@ -60,3 +60,5 @@ target/
 
 #Project Specific
 coverage/
+
+.tokens.json
