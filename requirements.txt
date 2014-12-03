@@ -3,3 +3,4 @@ coverage
 tabulate
 requests
 responses
+pickledb

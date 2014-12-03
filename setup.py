@@ -10,7 +10,7 @@ config = {
     'download_url': 'http://github.com/samueljackson92/CSAlumni-Client',
     'author_email': 'samueljackson@outlook.com',
     'version': '0.1.0',
-    'install_requires': ['nose', 'requests', 'responses', 'coverage', 'click', 'tabulate'],
+    'install_requires': ['nose', 'requests', 'responses', 'coverage', 'click', 'tabulate', 'pickledb'],
     'entry_points': '''
         [console_scripts]
         csa_client=csa_client.command:cli
