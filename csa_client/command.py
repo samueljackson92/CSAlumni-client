@@ -75,7 +75,7 @@ def authorize(ctx, username, password):
 @click.pass_context
 @catch_HTTPError
 def users(ctx):
-    """Users group init function"""
+    """Perform CRUD operations on users of the CSA site"""
     pass
 
 @users.command()
@@ -153,7 +153,7 @@ def destroy(ctx, user_id):
 @cli.group()
 @click.pass_context
 def broadcasts(ctx):
-    """Users group init function"""
+    """Perform CRUD operations on broadcasts from the CSA site"""
     pass
 
 @broadcasts.command()
