@@ -2,8 +2,9 @@ import click
 import datetime
 import json
 import sys
-
 from functools import update_wrapper
+from tabulate import tabulate
+
 from requests.exceptions import HTTPError
 from token_cache import TokenCache
 from api import CsaAPI
@@ -22,16 +23,11 @@ def update_non_empty(json_data, update_data):
 
 def print_multiple_entries(json_data, show_keys):
     """Print a table of json data to the cli"""
-    header_items = ["%-20s" % key for key in show_keys]
-    header = ' '.join(header_items)
+    header = [key for key in show_keys]
+    table_data = [[item[key]  for key in show_keys] for item in json_data]
 
-    click.echo(header)
-    click.echo('-'*len(header))
-
-    for item in json_data:
-        content_items = ["%-25s" % item[key] for key in show_keys]
-        content = ' '.join(content_items)
-        click.echo(content)
+    table_string = tabulate(table_data, headers=header, tablefmt="rst")
+    click.echo(table_string)
 
 def catch_HTTPError(f):
     @click.pass_context
