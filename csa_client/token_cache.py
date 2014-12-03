@@ -3,7 +3,7 @@ __date__ = "December 2, 2014"
 __license__ = "MIT"
 
 import os
-import json
+import pickledb
 
 from constants import *
 
@@ -14,8 +14,10 @@ class TokenCache(object):
         if not token_data:
             raise ValueError("Token data does not exist.")
 
-        with open(TOKEN_FILE, 'w') as token_file:
-            json.dump(token_data, token_file)
+        db = pickledb.load(TOKEN_FILE, False)
+        db.set('access_token', token_data['access_token'])
+        db.set('refresh_token', token_data['refresh_token'])
+        db.dump()
 
     @staticmethod
     def load_tokens():
@@ -23,6 +25,8 @@ class TokenCache(object):
         if not os.path.isfile(TOKEN_FILE):
             raise ValueError("Token cache file does not exist.")
 
-        with open(TOKEN_FILE, 'r') as token_file:
-            token_data = json.load(token_file)
-            return token_data
+        db = pickledb.load(TOKEN_FILE, False)
+        tokens = {}
+        tokens['access_token'] = db.get('access_token')
+        tokens['refresh_token'] = db.get('refresh_token')
+        return tokens
