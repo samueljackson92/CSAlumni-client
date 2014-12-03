@@ -1,6 +1,11 @@
 import click
 import datetime
 import json
+import sys
+
+from functools import update_wrapper
+from requests.exceptions import HTTPError
+from token_cache import TokenCache
 from api import CsaAPI
 
 NOW = datetime.datetime.now()
@@ -28,12 +33,43 @@ def print_multiple_entries(json_data, show_keys):
         content = ' '.join(content_items)
         click.echo(content)
 
+def catch_HTTPError(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+       try:
+           return ctx.invoke(f, ctx, *args, **kwargs)
+       except HTTPError, e:
+           click.echo(e)
+           sys.exit(1)
+    return update_wrapper(new_func, f)
+
 @click.group()
-@click.option('--username', default='')
-@click.option('--password', default='')
 @click.pass_context
-def cli(ctx, username, password):
-    ctx.obj = CsaAPI(username, password)
+def cli(ctx):
+    if not ctx.invoked_subcommand == 'authorize':
+        try:
+            ctx.obj = CsaAPI()
+        except ValueError, e:
+            click.echo(e)
+            click.echo("Could not retrieve tokens from cache. "
+                       "Have you run csa_client authorize ?")
+            sys.exit(1)
+        except HTTPError, e:
+            click.echo(e.message)
+            sys.exit(1)
+
+@cli.command()
+@click.option('--username', prompt='Enter your username',
+              help="Username used to connect to the CsaAPI")
+@click.password_option(help="Password used to connect to the CsaAPI")
+@click.pass_context
+@catch_HTTPError
+def authorize(ctx, username, password):
+    try:
+        ctx.obj = CsaAPI(username=username, password=password)
+    except HTTPError, e:
+        click.echo(e.message)
+        sys.exit(1)
 
 ##############################################################################
 # User's group commands
@@ -41,6 +77,7 @@ def cli(ctx, username, password):
 
 @cli.group()
 @click.pass_context
+@catch_HTTPError
 def users(ctx):
     """Users group init function"""
     pass
@@ -50,11 +87,21 @@ def users(ctx):
 @click.option('--sort-by', default='id',
               type=click.Choice(['id', 'firstname', 'surname', 'email']))
 @click.pass_context
+@catch_HTTPError
 def search(ctx, query, sort_by):
     """ Search for users """
     users_list = ctx.obj.search(query)
     users_list = sort_json(users_list, sort_by)
     print_multiple_entries(users_list, ['id', 'firstname', 'surname', 'email', 'phone'])
+
+@users.command()
+@click.argument("user-id")
+@click.pass_context
+@catch_HTTPError
+def show(ctx, user_id):
+    """ Search for users """
+    user = ctx.obj.get_user(user_id)
+    print_multiple_entries([user], ['id', 'firstname', 'surname', 'email', 'phone'])
 
 @users.command()
 @click.option('--firstname', prompt="Enter firstname",
@@ -73,6 +120,7 @@ def search(ctx, query, sort_by):
               help="Login name for the user")
 @click.password_option('--password', help="Password for the user")
 @click.pass_context
+@catch_HTTPError
 def create(ctx, **user_params):
     ctx.obj.create_user(user_params)
     click.echo("User created.")
@@ -87,6 +135,7 @@ def create(ctx, **user_params):
 @click.option('--jobs', is_flag=True, expose_value=True,
               help="Whether the user subscribes to jobs")
 @click.pass_context
+@catch_HTTPError
 def update(ctx, **user_params):
     user = ctx.obj.get_user(user_params['id'])
     user = update_non_empty(user, user_params)
@@ -96,6 +145,7 @@ def update(ctx, **user_params):
 @users.command()
 @click.argument('user-id', type=int)
 @click.pass_context
+@catch_HTTPError
 def destroy(ctx, user_id):
     ctx.obj.destroy_user(user_id)
     click.echo("User destoryed.")
@@ -114,6 +164,7 @@ def broadcasts(ctx):
 @click.argument('content', type=str)
 @click.option('--feeds', '-f', multiple=True, type=str)
 @click.pass_context
+@catch_HTTPError
 def create(ctx, content, feeds):
     user = ctx.obj.get_user()
     broadcast = {'user_id': user['id'], 'content': content}
@@ -123,6 +174,7 @@ def create(ctx, content, feeds):
 
 @broadcasts.command()
 @click.pass_context
+@catch_HTTPError
 def show(ctx):
     """ Search for users """
     broadcasts_list = ctx.obj.get_broadcasts()
@@ -131,6 +183,7 @@ def show(ctx):
 @broadcasts.command()
 @click.argument('broadcast-id', type=int)
 @click.pass_context
+@catch_HTTPError
 def destroy(ctx, broadcast_id):
     ctx.obj.destroy_broadcast(broadcast_id)
     click.echo("Broadcast destoryed.")

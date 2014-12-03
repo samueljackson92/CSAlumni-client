@@ -60,3 +60,5 @@ target/
 
 #Project Specific
 coverage/
+
+.csa_tokens.json

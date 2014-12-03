@@ -4,6 +4,6 @@ python:
 # command to install dependencies
 install: "pip install -r requirements.txt"
 # command to run tests
-script: nosetests --with-coverage --cover-package=csa_api --cover-min-percentage=95
+script: nosetests --with-coverage --cover-package=csa_api
 notifications:
   email: false
