@@ -35,3 +35,8 @@ END_POINTS = {
 
     "/coffee": "BREW"
 }
+
+#Squash ssl verify warning if we're not verifying.
+if not VERIFY_SSL:
+    import requests.packages.urllib3 as urllib3
+    urllib3.disable_warnings()
