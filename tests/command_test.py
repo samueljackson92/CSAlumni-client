@@ -27,6 +27,18 @@ class TestCommand:
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
+    ##########################################################################
+    # User tests
+    ##########################################################################
+
+    @responses.activate
+    def test_create_user(self):
+        nose.tools.assert_false(True)
+
+    @responses.activate
+    def test_update_user(self):
+        nose.tools.assert_false(True)
+
     @responses.activate
     def test_show_user(self):
         runner = CliRunner()
@@ -41,3 +53,37 @@ class TestCommand:
             result = runner.invoke(cli, ['users', 'show', '41'])
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
+
+
+    @responses.activate
+    def test_search_users(self):
+        nose.tools.assert_false(True)
+
+    @responses.activate
+    def test_destory_user(self):
+        nose.tools.assert_false(True)
+
+
+    @responses.activate
+    def test_search_users(self):
+        nose.tools.assert_false(True)
+
+    ##########################################################################
+    # Broadcast tests
+    ##########################################################################
+
+    @responses.activate
+    def test_create_broadcast(self):
+        nose.tools.assert_false(True)
+
+    @responses.activate
+    def test_search_broadcasts(self):
+        nose.tools.assert_false(True)
+
+    @responses.activate
+    def test_show_broadcast(self):
+        nose.tools.assert_false(True)
+
+    @responses.activate
+    def test_destroy_broadcast(self):
+        nose.tools.assert_false(True)
