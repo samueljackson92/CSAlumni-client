@@ -86,9 +86,10 @@ class CsaAPI(object):
         json_reponse = response.json()
         return json_reponse
 
-    def get_broadcasts(self):
+    def search(self, query=''):
         """Get all broadcasts on the server."""
-        response = self.session.make_request('/broadcasts')
+        response = self.session.make_request('/broadcasts/search',
+                                             params={'q': query})
         json_reponse = response.json()
         return json_reponse
 
