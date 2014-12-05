@@ -39,12 +39,24 @@ def catch_HTTPError(f):
            sys.exit(1)
     return update_wrapper(new_func, f)
 
+
+def load_tokens():
+    """Load the oauth tokens at the start of a command"""
+    return TokenCache.load_tokens()
+
+def cache_tokens(ctx):
+    """Cache the oauth tokens after a command has executed """
+    tokens = ctx.obj.get_session().get_tokens()
+    TokenCache.cache_tokens(tokens)
+
 @click.group()
 @click.pass_context
 def cli(ctx):
     if not ctx.invoked_subcommand == 'authorize':
         try:
-            ctx.obj = CsaAPI()
+            tokens = load_tokens()
+            ctx.obj = CsaAPI(tokens=tokens)
+            cache_tokens(ctx)
         except ValueError, e:
             click.echo(e)
             click.echo("Could not retrieve tokens from cache. "
@@ -61,11 +73,9 @@ def cli(ctx):
 @click.pass_context
 @catch_HTTPError
 def authorize(ctx, username, password):
-    try:
-        ctx.obj = CsaAPI(username=username, password=password)
-    except HTTPError, e:
-        click.echo(e.message)
-        sys.exit(1)
+    ctx.obj = CsaAPI(username=username, password=password)
+    cache_tokens(ctx)
+    click.echo("Successfully authorized as user: %s" % username)
 
 ##############################################################################
 # User's group commands

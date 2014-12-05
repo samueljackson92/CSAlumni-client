@@ -21,13 +21,19 @@ def load_fixture(file_name):
         fixture_text = file_handle.read()
     return fixture_text
 
-def mock_auth_response(status=200, body=None):
+def mock_auth_response(status=200, body=None, user_id=1):
     if body is None:
         body = json.dumps({"access_token": "abcdef", "refresh_token": "abcdef"})
 
     responses.add(responses.POST,
                   RequestHandler._build_end_point_uri('/oauth/token'),
                   body=body,
+                  status=status,
+                  content_type='application/json')
+
+    responses.add(responses.GET,
+                  RequestHandler._build_end_point_uri('/users/verify'),
+                  body=json.dumps({"id": user_id}),
                   status=status,
                   content_type='application/json')
 
