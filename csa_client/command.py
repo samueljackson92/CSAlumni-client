@@ -39,12 +39,24 @@ def catch_HTTPError(f):
            sys.exit(1)
     return update_wrapper(new_func, f)
 
+
+def load_tokens():
+    """Load the oauth tokens at the start of a command"""
+    return TokenCache.load_tokens()
+
+def cache_tokens(ctx):
+    """Cache the oauth tokens after a command has executed """
+    tokens = ctx.obj.get_session().get_tokens()
+    TokenCache.cache_tokens(tokens)
+
 @click.group()
 @click.pass_context
 def cli(ctx):
     if not ctx.invoked_subcommand == 'authorize':
         try:
-            ctx.obj = CsaAPI()
+            tokens = load_tokens()
+            ctx.obj = CsaAPI(tokens=tokens)
+            cache_tokens(ctx)
         except ValueError, e:
             click.echo(e)
             click.echo("Could not retrieve tokens from cache. "
@@ -61,11 +73,9 @@ def cli(ctx):
 @click.pass_context
 @catch_HTTPError
 def authorize(ctx, username, password):
-    try:
-        ctx.obj = CsaAPI(username=username, password=password)
-    except HTTPError, e:
-        click.echo(e.message)
-        sys.exit(1)
+    ctx.obj = CsaAPI(username=username, password=password)
+    cache_tokens(ctx)
+    click.echo("Successfully authorized as user: %s" % username)
 
 ##############################################################################
 # User's group commands
@@ -86,7 +96,7 @@ def users(ctx):
 @catch_HTTPError
 def search(ctx, query, sort_by):
     """ Search for users """
-    users_list = ctx.obj.search(query)
+    users_list = ctx.obj.users_search(query)
     users_list = sort_json(users_list, sort_by)
     print_multiple_entries(users_list, ['id', 'firstname', 'surname', 'email', 'phone'])
 
@@ -169,12 +179,17 @@ def create(ctx, content, feeds):
     click.echo("Broadcast created.")
 
 @broadcasts.command()
+@click.argument('query')
+@click.option('--sort-by', default='id',
+              type=click.Choice(['id', 'user_id', 'content', 'created_at']),
+              help="Column to sort by.")
 @click.pass_context
 @catch_HTTPError
-def show(ctx):
+def search(ctx, query, sort_by):
     """ Search for users """
-    broadcasts_list = ctx.obj.get_broadcasts()
-    print_multiple_entries(broadcasts_list, ['user_id', 'content', 'url'])
+    broadcasts_list = ctx.obj.broadcasts_search(query)
+    broadcasts_list = sort_json(broadcasts_list, sort_by)
+    print_multiple_entries(broadcasts_list, ['id', 'user_id', 'content', 'created_at'])
 
 @broadcasts.command()
 @click.argument('broadcast-id', type=int)

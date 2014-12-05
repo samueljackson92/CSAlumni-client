@@ -16,7 +16,7 @@ CONTENT_TYPE = 'json'
 VERIFY_SSL = False
 
 # TOKEN_FILE = os.path.join(os.path.expanduser("~"), '.csa_tokens.json')
-TOKEN_FILE = './.csa_tokens.json'
+TOKEN_FILE = os.path.expanduser('.csa_tokens.json')
 
 END_POINTS = {
     "/oauth/token": "POST",
@@ -28,7 +28,7 @@ END_POINTS = {
     "/users/update/:id": "PUT",
     "/users/destory/:id": "DELETE",
 
-    "/broadcasts": "GET",
+    "/broadcasts/search": "GET",
     "/broadcasts/create": "POST",
     "/broadcasts/show/:id": "GET",
     "/broadcasts/destroy/:id": "DELETE",

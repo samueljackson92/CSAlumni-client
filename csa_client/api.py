@@ -12,13 +12,15 @@ class CsaAPI(object):
     :param username: CSA application username
     :param password: CSA application password
     """
-    def __init__(self,username=None, password=None):
+    def __init__(self, tokens=None, username=None, password=None):
         self.session = OAuth2ResourceOwner('/oauth/token')
 
         if username is None and password is None:
-            self.session.set_tokens(TokenCache.load_tokens())
+            self.session.set_tokens(tokens)
         else:
             self.session.request_auth_with_client_credentials(username, password)
+
+        self.verify()
 
     ###########################################################################
     # User request helpers
@@ -60,7 +62,7 @@ class CsaAPI(object):
         self.session.make_request('/users/destory/:id', {":id": user_id})
 
 
-    def search(self, query=''):
+    def users_search(self, query=''):
         response = self.session.make_request('/users/search', params={'q': query})
         json_reponse = response.json()
         return json_reponse
@@ -86,9 +88,10 @@ class CsaAPI(object):
         json_reponse = response.json()
         return json_reponse
 
-    def get_broadcasts(self):
+    def broadcasts_search(self, query=''):
         """Get all broadcasts on the server."""
-        response = self.session.make_request('/broadcasts')
+        response = self.session.make_request('/broadcasts/search',
+                                             params={'q': query})
         json_reponse = response.json()
         return json_reponse
 
@@ -107,9 +110,11 @@ class CsaAPI(object):
         """ Request via BREW """
         return self.session.make_request('/coffee')
 
-    def __del__(self):
-        try:
-            tokens = self.session.get_tokens()
-            TokenCache.cache_tokens(tokens)
-        except AttributeError,e:
-            pass
+    def verify(self):
+        """Get the users id from the server """
+        response = self.session.make_request('/users/verify')
+        json_reponse = response.json()
+        self.user_id = json_reponse['id']
+
+    def get_session(self):
+        return self.session
