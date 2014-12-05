@@ -62,7 +62,7 @@ class CsaAPI(object):
         self.session.make_request('/users/destory/:id', {":id": user_id})
 
 
-    def search(self, query=''):
+    def users_search(self, query=''):
         response = self.session.make_request('/users/search', params={'q': query})
         json_reponse = response.json()
         return json_reponse
@@ -88,9 +88,10 @@ class CsaAPI(object):
         json_reponse = response.json()
         return json_reponse
 
-    def get_broadcasts(self):
+    def broadcasts_search(self, query=''):
         """Get all broadcasts on the server."""
-        response = self.session.make_request('/broadcasts')
+        response = self.session.make_request('/broadcasts/search',
+                                             params={'q': query})
         json_reponse = response.json()
         return json_reponse
 

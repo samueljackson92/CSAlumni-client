@@ -197,7 +197,7 @@ class ApiTests(unittest.TestCase):
                       content_type='application/json')
 
         api = CsaAPI("admin", 'taliesin')
-        response = api.search()
+        response = api.users_search()
 
         nose.tools.assert_list_equal(search_fixture, response)
 
@@ -214,7 +214,7 @@ class ApiTests(unittest.TestCase):
                       content_type='application/json')
 
         api = CsaAPI("admin", 'taliesin')
-        response = api.search()
+        response = api.users_search()
         nose.tools.assert_list_equal(search_fixture, response)
 
     @responses.activate
@@ -228,7 +228,7 @@ class ApiTests(unittest.TestCase):
                       content_type='application/json')
 
         api = CsaAPI("cwl39", 'taliesin')
-        response = api.search()
+        response = api.users_search()
 
 
     ##########################################################################
@@ -291,19 +291,48 @@ class ApiTests(unittest.TestCase):
         broadcast = api.destroy_broadcast(1)
 
     @responses.activate
-    def test_get_broadcasts(self):
+    def test_search_broadcasts(self):
         mock_auth_response()
 
-        fixture = load_fixture("broadcasts.json")
+        fixture = load_fixture("broadcasts/search.json")
         responses.add(responses.GET,
-                      RequestHandler._build_end_point_uri('/broadcasts'),
+                      RequestHandler._build_end_point_uri('/broadcasts/search'),
                       body=fixture,
                       status=200,
                       content_type='application/json')
 
         api = CsaAPI("admin", 'taliesin')
-        broadcasts = api.get_broadcasts()
+        broadcasts = api.broadcasts_search()
         nose.tools.assert_list_equal(json.loads(fixture), broadcasts)
+
+    @responses.activate
+    def test_broadcast_search_with_query(self):
+        mock_auth_response()
+
+        search_fixture = json.loads(load_fixture('broadcasts/search.json'))
+        search_fixture = search_fixture[:1]
+        responses.add(responses.GET,
+                      RequestHandler._build_end_point_uri('/broadcasts/search'),
+                      body=json.dumps(search_fixture),
+                      status=200,
+                      content_type='application/json')
+
+        api = CsaAPI("admin", 'taliesin')
+        response = api.broadcasts_search()
+        nose.tools.assert_list_equal(search_fixture, response)
+
+    @responses.activate
+    @nose.tools.raises(requests.exceptions.HTTPError)
+    def test_broadcast_cannot_search(self):
+        mock_auth_response()
+
+        responses.add(responses.GET,
+                      RequestHandler._build_end_point_uri('/broadcasts/search'),
+                      status=422,
+                      content_type='application/json')
+
+        api = CsaAPI("cwl39", 'taliesin')
+        response = api.broadcasts_search()
 
     @responses.activate
     @nose.tools.raises(requests.exceptions.HTTPError)

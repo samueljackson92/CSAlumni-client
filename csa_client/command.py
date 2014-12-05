@@ -96,7 +96,7 @@ def users(ctx):
 @catch_HTTPError
 def search(ctx, query, sort_by):
     """ Search for users """
-    users_list = ctx.obj.search(query)
+    users_list = ctx.obj.users_search(query)
     users_list = sort_json(users_list, sort_by)
     print_multiple_entries(users_list, ['id', 'firstname', 'surname', 'email', 'phone'])
 
@@ -179,12 +179,17 @@ def create(ctx, content, feeds):
     click.echo("Broadcast created.")
 
 @broadcasts.command()
+@click.argument('query')
+@click.option('--sort-by', default='id',
+              type=click.Choice(['id', 'user_id', 'content', 'created_at']),
+              help="Column to sort by.")
 @click.pass_context
 @catch_HTTPError
-def show(ctx):
+def search(ctx, query, sort_by):
     """ Search for users """
-    broadcasts_list = ctx.obj.get_broadcasts()
-    print_multiple_entries(broadcasts_list, ['user_id', 'content', 'url'])
+    broadcasts_list = ctx.obj.broadcasts_search(query)
+    broadcasts_list = sort_json(broadcasts_list, sort_by)
+    print_multiple_entries(broadcasts_list, ['id', 'user_id', 'content', 'created_at'])
 
 @broadcasts.command()
 @click.argument('broadcast-id', type=int)
