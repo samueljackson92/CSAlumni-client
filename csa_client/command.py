@@ -23,11 +23,14 @@ def update_non_empty(json_data, update_data):
 
 def print_multiple_entries(json_data, show_keys):
     """Print a table of json data to the cli"""
-    header = [key for key in show_keys]
-    table_data = [[item[key]  for key in show_keys] for item in json_data]
+    if len(json_data) == 0:
+        click.echo("No entries to show.")
+    else:
+        header = [key for key in show_keys]
+        table_data = [[item[key]  for key in show_keys] for item in json_data]
 
-    table_string = tabulate(table_data, headers=header, tablefmt="rst")
-    click.echo(table_string)
+        table_string = tabulate(table_data, headers=header, tablefmt="rst")
+        click.echo(table_string)
 
 def catch_HTTPError(f):
     @click.pass_context
@@ -35,7 +38,7 @@ def catch_HTTPError(f):
        try:
            return ctx.invoke(f, ctx, *args, **kwargs)
        except HTTPError, e:
-           click.echo(e)
+           click.echo(e.message + e.response.text)
            sys.exit(1)
     return update_wrapper(new_func, f)
 
@@ -51,6 +54,7 @@ def cache_tokens(ctx):
 
 @click.group()
 @click.pass_context
+@catch_HTTPError
 def cli(ctx):
     if not ctx.invoked_subcommand == 'authorize':
         try:
@@ -62,9 +66,10 @@ def cli(ctx):
             click.echo("Could not retrieve tokens from cache. "
                        "Have you run csa_client authorize ?")
             sys.exit(1)
-        except HTTPError, e:
-            click.echo(e.message)
-            sys.exit(1)
+
+##############################################################################
+# Misc commands
+##############################################################################
 
 @cli.command()
 @click.option('--username', prompt='Enter your username',
@@ -76,6 +81,13 @@ def authorize(ctx, username, password):
     ctx.obj = CsaAPI(username=username, password=password)
     cache_tokens(ctx)
     click.echo("Successfully authorized as user: %s" % username)
+
+
+@cli.command('make-coffee')
+@click.pass_context
+@catch_HTTPError
+def make_coffee(ctx):
+    ctx.obj.make_coffee()
 
 ##############################################################################
 # User's group commands
@@ -172,11 +184,19 @@ def broadcasts(ctx):
 @click.pass_context
 @catch_HTTPError
 def create(ctx, content, feeds):
-    user = ctx.obj.get_user()
-    broadcast = {'user_id': user['id'], 'content': content}
+    broadcast = {'content': content}
     broadcast_params = {'broadcast': broadcast, 'feeds': feeds}
     ctx.obj.create_broadcast(broadcast_params)
     click.echo("Broadcast created.")
+
+@broadcasts.command()
+@click.argument("broadcast-id")
+@click.pass_context
+@catch_HTTPError
+def show(ctx, broadcast_id):
+    """ Search for users """
+    broadcast = ctx.obj.get_broadcast(broadcast_id)
+    print_multiple_entries([broadcast], ['user_id', 'content', 'created_at'])
 
 @broadcasts.command()
 @click.argument('query')

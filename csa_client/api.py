@@ -59,7 +59,7 @@ class CsaAPI(object):
         :param user_id: the ide of the user to delete
         """
         user_id = self.user_id if user_id is None else user_id
-        self.session.make_request('/users/destory/:id', {":id": user_id})
+        self.session.make_request('/users/destroy/:id', {":id": user_id})
 
 
     def users_search(self, query=''):
@@ -76,6 +76,7 @@ class CsaAPI(object):
 
         :param broadcast: the broadcast object to create
         """
+        broadcast['broadcast'].update({'user_id': self.user_id})
         self.session.make_request('/broadcasts/create', params=broadcast)
 
     def get_broadcast(self, broadcast_id):

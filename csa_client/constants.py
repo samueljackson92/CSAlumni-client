@@ -26,7 +26,7 @@ END_POINTS = {
     "/users/create": "POST",
     "/users/show/:id": "GET",
     "/users/update/:id": "PUT",
-    "/users/destory/:id": "DELETE",
+    "/users/destroy/:id": "DELETE",
 
     "/broadcasts/search": "GET",
     "/broadcasts/create": "POST",
