@@ -164,7 +164,7 @@ class ApiTests(unittest.TestCase):
         mock_auth_response()
 
         responses.add(responses.DELETE,
-                      RequestHandler._build_end_point_uri('/users/destory/:id',
+                      RequestHandler._build_end_point_uri('/users/destroy/:id',
                                                     {':id': '39'}),
                       status=422,
                       content_type='application/json')
@@ -177,7 +177,7 @@ class ApiTests(unittest.TestCase):
         mock_auth_response()
 
         responses.add(responses.DELETE,
-                      RequestHandler._build_end_point_uri('/users/destory/:id',
+                      RequestHandler._build_end_point_uri('/users/destroy/:id',
                                                     {':id': '39'}),
                       status=200,
                       content_type='application/json')
@@ -241,6 +241,7 @@ class ApiTests(unittest.TestCase):
 
         fixture = load_fixture("broadcasts/1.json")
         fixture = json.loads(fixture)
+        fixture = {'broadcast': fixture}
 
         def check_broadcast_was_created(request):
             body = json.loads(request.body)
@@ -261,19 +262,21 @@ class ApiTests(unittest.TestCase):
         mock_auth_response()
 
         fixture = load_fixture("broadcasts/1.json")
+        fixture = json.loads(fixture)
         responses.add(responses.GET,
                       RequestHandler._build_end_point_uri('/broadcasts/show/:id',
                                                  {':id': '1'}),
-                      body=fixture,
+                      body=json.dumps(fixture),
                       status=200,
                       content_type='application/json')
 
         api = CsaAPI("admin", 'taliesin')
         broadcast = api.get_broadcast(1)
-        nose.tools.assert_dict_equal(json.loads(fixture), broadcast)
+
+        nose.tools.assert_dict_equal(fixture, broadcast)
 
     @responses.activate
-    def test_destory_broadcast(self):
+    def test_destroy_broadcast(self):
         mock_auth_response()
 
         def assert_delete(request):
