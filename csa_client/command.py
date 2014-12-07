@@ -5,7 +5,7 @@ import sys
 from functools import update_wrapper
 from tabulate import tabulate
 
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 from token_cache import TokenCache
 from api import CsaAPI
 
@@ -38,7 +38,12 @@ def catch_HTTPError(f):
        try:
            return ctx.invoke(f, ctx, *args, **kwargs)
        except HTTPError, e:
-           click.echo(e.message + e.response.text)
+           click.echo(e.message)
+           if e.response.status_code == 418:
+               click.echo(e.response.text)
+           sys.exit(1)
+       except ConnectionError, e:
+           click.echo(e.message)
            sys.exit(1)
     return update_wrapper(new_func, f)
 
@@ -71,7 +76,7 @@ def cli(ctx):
 # Misc commands
 ##############################################################################
 
-@cli.command()
+@cli.command(help="Login to the CS Alumni site.")
 @click.option('--username', prompt='Enter your username',
               help="Username used to connect to the CsaAPI")
 @click.password_option(help="Password used to connect to the CsaAPI")
@@ -83,7 +88,8 @@ def authorize(ctx, username, password):
     click.echo("Successfully authorized as user: %s" % username)
 
 
-@cli.command('make-coffee')
+@cli.command('make-coffee',
+             help="Run a HTCPCP request")
 @click.pass_context
 @catch_HTTPError
 def make_coffee(ctx):
@@ -113,11 +119,11 @@ def search(ctx, query, sort_by):
     print_multiple_entries(users_list, ['id', 'firstname', 'surname', 'email', 'phone'])
 
 @users.command()
-@click.argument("user-id")
+@click.option("--user-id", type=int, help="ID of user to show")
 @click.pass_context
 @catch_HTTPError
 def show(ctx, user_id):
-    """ Search for users """
+    """ Show a user """
     user = ctx.obj.get_user(user_id)
     print_multiple_entries([user], ['id', 'firstname', 'surname', 'email', 'phone'])
 
@@ -134,17 +140,20 @@ def show(ctx, user_id):
 @click.option('--jobs', is_flag=True, expose_value=True,
               prompt='Do has a job?',
               help="Whether the user subscribes to jobs")
+@click.option('--phone', prompt="Enter phone number",
+              help="Phone number")
 @click.option('--login', prompt="Enter login",
               help="Login name for the user")
 @click.password_option('--password', help="Password for the user")
 @click.pass_context
 @catch_HTTPError
 def create(ctx, **user_params):
+    """ Create a new user """
     ctx.obj.create_user(user_params)
     click.echo("User created.")
 
 @users.command()
-@click.argument('id', type=int)
+@click.option('--user-id', type=int, help="ID of the user to update")
 @click.option('--firstname', help="Firstname of the user")
 @click.option('--surname', help="Surname of the user")
 @click.option('--email', help="Email address of the user")
@@ -155,18 +164,20 @@ def create(ctx, **user_params):
 @click.pass_context
 @catch_HTTPError
 def update(ctx, **user_params):
-    user = ctx.obj.get_user(user_params['id'])
+    """ Update a user """
+    user = ctx.obj.get_user(user_params['user_id'])
     user = update_non_empty(user, user_params)
     ctx.obj.update_user(user)
     click.echo("User updated.")
 
 @users.command()
-@click.argument('user-id', type=int)
+@click.option('--user-id', type=int, help='ID of the user to destroy')
 @click.pass_context
 @catch_HTTPError
 def destroy(ctx, user_id):
+    """ Destroy a user """
     ctx.obj.destroy_user(user_id)
-    click.echo("User destoryed.")
+    click.echo("User destroyed.")
 
 ##############################################################################
 # Broadcast's group commands
@@ -184,6 +195,7 @@ def broadcasts(ctx):
 @click.pass_context
 @catch_HTTPError
 def create(ctx, content, feeds):
+    """ Create a broadcast """
     broadcast = {'content': content}
     broadcast_params = {'broadcast': broadcast, 'feeds': feeds}
     ctx.obj.create_broadcast(broadcast_params)
@@ -194,7 +206,7 @@ def create(ctx, content, feeds):
 @click.pass_context
 @catch_HTTPError
 def show(ctx, broadcast_id):
-    """ Search for users """
+    """ Show a broadcast """
     broadcast = ctx.obj.get_broadcast(broadcast_id)
     print_multiple_entries([broadcast], ['user_id', 'content', 'created_at'])
 
@@ -206,7 +218,7 @@ def show(ctx, broadcast_id):
 @click.pass_context
 @catch_HTTPError
 def search(ctx, query, sort_by):
-    """ Search for users """
+    """ Search for broadcasts """
     broadcasts_list = ctx.obj.broadcasts_search(query)
     broadcasts_list = sort_json(broadcasts_list, sort_by)
     print_multiple_entries(broadcasts_list, ['id', 'user_id', 'content', 'created_at'])
@@ -216,8 +228,9 @@ def search(ctx, query, sort_by):
 @click.pass_context
 @catch_HTTPError
 def destroy(ctx, broadcast_id):
+    """ Destroy a broadcast """
     ctx.obj.destroy_broadcast(broadcast_id)
-    click.echo("Broadcast destoryed.")
+    click.echo("Broadcast destroyed.")
 
 if __name__ == "__main__":
     cli(obj={})

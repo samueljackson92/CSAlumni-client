@@ -26,11 +26,17 @@ class CsaAPI(object):
     # User request helpers
     ###########################################################################
 
-    def create_user(self, user):
+    def create_user(self, user_params):
         """Create a new user
 
         :param user: the user object to create
         """
+        user_params['user_detail_attributes'] = {
+            'login': user_params['login'],
+            'password': user_params['password'],
+            'password_confirmation': user_params['password']
+        }
+        user = {'user': user_params}
         self.session.make_request('/users/create', params=user)
 
     def get_user(self, user_id=None):

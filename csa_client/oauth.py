@@ -75,6 +75,8 @@ class OAuth2ResourceOwner(RequestHandler):
                 self.request_auth_with_refresh_token()
                 response = super(OAuth2ResourceOwner, self) \
                                 .make_request(end_point, end_point_vars, params)
+            else:
+                raise requests.exceptions.HTTPError(response.text)
 
         response.raise_for_status()
         return response

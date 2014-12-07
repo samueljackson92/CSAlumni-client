@@ -45,7 +45,7 @@ class CommandTests(unittest.TestCase):
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
-            user_params = ['sam', 'jackson', 'slj11@aber.ac.uk', '1985', 'n', 'slj11', 'password', 'password']
+            user_params = ['sam', 'jackson', 'slj11@aber.ac.uk', '1985', 'n', '012344567', 'slj11', 'password', 'password']
             user_params = '\n'.join(user_params)
 
             result = runner.invoke(cli, ['users', 'create'], input=user_params)
@@ -66,7 +66,7 @@ class CommandTests(unittest.TestCase):
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
-            result = runner.invoke(cli, ['users', 'update', '41', '--firstname=samuel'])
+            result = runner.invoke(cli, ['users', 'update', '--user-id=41', '--firstname=samuel'])
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
@@ -82,7 +82,7 @@ class CommandTests(unittest.TestCase):
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
-            result = runner.invoke(cli, ['users', 'show', '41'])
+            result = runner.invoke(cli, ['users', 'show', '--user-id=41'])
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
@@ -117,7 +117,7 @@ class CommandTests(unittest.TestCase):
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 
-            result = runner.invoke(cli, ['users', 'destroy', '41'])
+            result = runner.invoke(cli, ['users', 'destroy', '--user-id=41'])
             nose.tools.assert_false(result.exception)
             nose.tools.assert_equal(0, result.exit_code)
 

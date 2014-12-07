@@ -27,10 +27,16 @@ class ApiTests(unittest.TestCase):
 
         fixture = load_fixture("users/show/39.json")
         fixture = json.loads(fixture)
+        fixture.update({'password':'password', 'password_confirmation':'password', 'login':'myname'})
+
         def check_user_was_created(request):
             body = json.loads(request.body)
-            fixture.update({'access_token': body['access_token']})
-            nose.tools.assert_equal(fixture, body)
+            expected_data = {
+                'access_token': body['access_token'],
+                'user': fixture,
+            }
+
+            nose.tools.assert_equal(expected_data, body)
             return (200, {}, {})
 
 
